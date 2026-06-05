@@ -6,6 +6,7 @@ from django.db.models import Q
 from netbox.filtersets import NetBoxModelFilterSet
 
 from ..choices import (
+    EnabledDisabledChoices,
     L3OutInterfaceTypeChoices,
     OSPFAreaTypeChoices,
     OSPFNetworkTypeChoices,
@@ -14,6 +15,8 @@ from ..choices import (
 )
 from ..models.fabric import ACINode
 from ..models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -300,3 +303,40 @@ class ACIL3OutStaticRouteNextHopFilterSet(_SearchMixin, NetBoxModelFilterSet):
             "nexthop_type",
             "preference",
         )
+
+
+class ACIBFDInterfacePolicyFilterSet(_SearchMixin, NetBoxModelFilterSet):
+    aci_tenant_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACITenant.objects.all(), field_name="aci_tenant", label="Tenant (ID)"
+    )
+    admin_state = django_filters.MultipleChoiceFilter(choices=EnabledDisabledChoices)
+
+    class Meta:
+        model = ACIBFDInterfacePolicy
+        fields = (
+            "id",
+            "name",
+            "name_alias",
+            "description",
+            "admin_state",
+            "detection_multiplier",
+            "min_rx_interval_ms",
+            "min_tx_interval_ms",
+        )
+
+
+class ACIBFDInterfaceAttachmentFilterSet(_SearchMixin, NetBoxModelFilterSet):
+    aci_logical_interface_profile_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACILogicalInterfaceProfile.objects.all(),
+        field_name="aci_logical_interface_profile",
+        label="LIP (ID)",
+    )
+    aci_bfd_interface_policy_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIBFDInterfacePolicy.objects.all(),
+        field_name="aci_bfd_interface_policy",
+        label="BFD policy (ID)",
+    )
+
+    class Meta:
+        model = ACIBFDInterfaceAttachment
+        fields = ("id", "name", "name_alias", "description")

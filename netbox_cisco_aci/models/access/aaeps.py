@@ -111,6 +111,55 @@ class ACIAAEPDomainAssociation(models.Model):
                     }
                 )
 
+        if self.aci_aaep_id and self.aci_domain_id:
+            new_domain_pool_id = self.aci_domain.aci_vlan_pool_id
+            if new_domain_pool_id:
+                from netbox_cisco_aci.models.access.vlan_pools import ACIVLANPoolBlock
+
+                other_assocs = (
+                    ACIAAEPDomainAssociation.objects.filter(
+                        aci_aaep_id=self.aci_aaep_id,
+                    )
+                    .exclude(pk=self.pk)
+                    .exclude(aci_domain__aci_vlan_pool__isnull=True)
+                )
+
+                new_blocks = list(
+                    ACIVLANPoolBlock.objects.filter(
+                        aci_vlan_pool_id=new_domain_pool_id
+                    ).values_list("from_vlan", "to_vlan")
+                )
+
+                for assoc in other_assocs.select_related("aci_domain"):
+                    other_pool_id = assoc.aci_domain.aci_vlan_pool_id
+                    if other_pool_id == new_domain_pool_id:
+                        # Same pool — no overlap to check across pools
+                        # (within-pool is already handled by ACIVLANPoolBlock’s own validation).
+                        continue
+                    other_blocks = ACIVLANPoolBlock.objects.filter(aci_vlan_pool_id=other_pool_id)
+                    for ofrom, oto in other_blocks.values_list("from_vlan", "to_vlan"):
+                        for nfrom, nto in new_blocks:
+                            if not (nto < ofrom or nfrom > oto):
+                                raise ValidationError(
+                                    {
+                                        "aci_domain": _(
+                                            "Domain %(new)s has VLAN block %(nfrom)d-%(nto)d "
+                                            "which overlaps block %(ofrom)d-%(oto)d already "
+                                            "attached to this AAEP via domain %(old)s. "
+                                            "AAEPs cannot have multiple domains with "
+                                            "overlapping encap VLANs."
+                                        )
+                                        % {
+                                            "new": self.aci_domain,
+                                            "old": assoc.aci_domain,
+                                            "nfrom": nfrom,
+                                            "nto": nto,
+                                            "ofrom": ofrom,
+                                            "oto": oto,
+                                        }
+                                    }
+                                )
+
 
 class ACIAAEPEPGMapping(ACIFabricBaseModel):
     """AAEP \u2192 EPG mapping (``infraRsFuncToEpg``).

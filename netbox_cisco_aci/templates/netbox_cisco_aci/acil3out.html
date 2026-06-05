@@ -26,6 +26,26 @@
     {% include 'inc/panels/custom_fields.html' %}
   </div>
   <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Logical Node Profiles" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acilogicalnodeprofile_add' %}?aci_l3out={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for lnp in object.logical_node_profiles.all %}
+          <tr><td><a href="{{ lnp.get_absolute_url }}">{{ lnp.name }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No logical node profiles." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "External EPGs" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciexternalepg_add' %}?aci_l3out={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for epg in object.external_epgs.all %}
+          <tr><td><a href="{{ epg.get_absolute_url }}">{{ epg.name }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No external EPGs." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
     {% include 'inc/panels/comments.html' %}
   </div>
 </div>

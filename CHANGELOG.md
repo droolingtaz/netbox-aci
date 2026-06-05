@@ -9,9 +9,22 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/).
 
 ## [Unreleased]
 
-> **Compatibility:** NetBox v4.5, NetBox v4.6
+> **Compatibility:** NetBox v4.6 only (4.5 support dropped)
 
-_No unreleased changes yet — next release will start here._
+### Added
+
+- `ACIBFDInterfacePolicy` + `ACIBFDInterfaceAttachment` models for BFD on L3Out logical interfaces (migration `0010_bfd`).
+- `PLUGINS_CONFIG['netbox_cisco_aci']['l3out_default_protocols']` to seed L3Out protocol checkboxes on the create form at site level.
+- New validations:
+  - **EPG static port binding**: `encap_vlan` must fall within a VLAN pool block reachable through the EPG's domain bindings.
+  - **External EPG subnet**: prefix must be unique across all L3Outs sharing the same VRF.
+  - **AAEP domain association**: cannot attach two domains whose VLAN pool blocks overlap.
+- "Add" buttons on parent detail-page panels for all child models removed from the sidebar.
+
+### Changed
+
+- **BREAKING**: NetBox 4.6 only. NetBox 4.5 support is dropped. `min_version = max_version = "4.6.x"`. CI matrix narrowed to a single `v4.6.0` entry.
+- **BREAKING (UI)**: Navigation cleaned up from 52 menu items to 19 across 6 groups. Child models (selectors, attachments, sub-entries, per-port policies, all L3Out children) removed from the sidebar; reach them via Add buttons on parent detail pages. URLs and detail pages all preserved.
 
 ---
 

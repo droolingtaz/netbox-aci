@@ -292,3 +292,19 @@ urlpatterns += _crud(
     "ACIL3OutStaticRouteNextHop",
     "acil3outstaticroutenexthop",
 )
+
+# v0.2.0 — BFD
+urlpatterns += _crud(
+    "bfd-interface-policies",
+    "bfd-pol",
+    l3o,
+    "ACIBFDInterfacePolicy",
+    "acibfdinterfacepolicy",
+)
+urlpatterns += _crud(
+    "bfd-interface-attachments",
+    "bfd-att",
+    l3o,
+    "ACIBFDInterfaceAttachment",
+    "acibfdinterfaceattachment",
+)

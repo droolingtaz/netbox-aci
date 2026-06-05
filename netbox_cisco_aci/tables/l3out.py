@@ -4,6 +4,8 @@ import django_tables2 as tables
 from netbox.tables import ChoiceFieldColumn, NetBoxTable, columns
 
 from ..models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -341,3 +343,59 @@ class ACIL3OutStaticRouteNextHopTable(NetBoxTable):
             "tags",
         )
         default_columns = ("aci_static_route", "nexthop_address", "nexthop_type", "preference")
+
+
+class ACIBFDInterfacePolicyTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    aci_tenant = tables.Column(linkify=True, verbose_name="Tenant")
+    tags = columns.TagColumn(url_name="plugins:netbox_cisco_aci:acibfdinterfacepolicy_list")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIBFDInterfacePolicy
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "aci_tenant",
+            "admin_state",
+            "detection_multiplier",
+            "min_rx_interval_ms",
+            "min_tx_interval_ms",
+            "echo_admin_state",
+            "description",
+            "tags",
+        )
+        default_columns = (
+            "name",
+            "aci_tenant",
+            "admin_state",
+            "detection_multiplier",
+            "min_rx_interval_ms",
+            "min_tx_interval_ms",
+        )
+
+
+class ACIBFDInterfaceAttachmentTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    aci_logical_interface_profile = tables.Column(
+        linkify=True, verbose_name="Logical Interface Profile"
+    )
+    aci_bfd_interface_policy = tables.Column(linkify=True, verbose_name="BFD Policy")
+    tags = columns.TagColumn(url_name="plugins:netbox_cisco_aci:acibfdinterfaceattachment_list")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIBFDInterfaceAttachment
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "aci_logical_interface_profile",
+            "aci_bfd_interface_policy",
+            "description",
+            "tags",
+        )
+        default_columns = (
+            "name",
+            "aci_logical_interface_profile",
+            "aci_bfd_interface_policy",
+        )

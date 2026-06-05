@@ -735,3 +735,153 @@ class ACIL3OutStaticRouteNextHopAPITests(
                 "preference": 0,
             },
         ]
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfacePolicy
+# ---------------------------------------------------------------------------
+
+
+class ACIBFDInterfacePolicyAPITests(
+    APIViewTestCases.GetObjectViewTestCase,
+    APIViewTestCases.ListObjectsViewTestCase,
+    APIViewTestCases.CreateObjectViewTestCase,
+    APIViewTestCases.UpdateObjectViewTestCase,
+    APIViewTestCases.DeleteObjectViewTestCase,
+    APITestCase,
+):
+    from netbox_cisco_aci.models.l3out import ACIBFDInterfacePolicy
+
+    model = ACIBFDInterfacePolicy
+    view_namespace = PLUGIN_API_NAMESPACE
+    brief_fields = [
+        "aci_tenant",
+        "admin_state",
+        "description",
+        "display",
+        "id",
+        "name",
+        "url",
+    ]
+    bulk_update_data = {"description": "Bulk-updated"}
+
+    @classmethod
+    def setUpTestData(cls):
+        from netbox_cisco_aci.models.l3out import ACIBFDInterfacePolicy
+
+        fab = ACIFabric.objects.create(name="API-BFDPol-Fab")
+        tenant = ACITenant.objects.create(aci_fabric=fab, name="t-bfd-api")
+        for i in range(3):
+            ACIBFDInterfacePolicy.objects.create(aci_tenant=tenant, name=f"bfd-pol-{i}")
+        cls.create_data = [
+            {
+                "aci_tenant": tenant.pk,
+                "name": "bfd-pol-a",
+                "admin_state": "enabled",
+                "detection_multiplier": 5,
+                "min_rx_interval_ms": 100,
+                "min_tx_interval_ms": 100,
+                "echo_admin_state": "disabled",
+                "echo_rx_interval_ms": 100,
+                "slow_timer_ms": 3000,
+                "controls": [],
+            },
+            {
+                "aci_tenant": tenant.pk,
+                "name": "bfd-pol-b",
+                "admin_state": "disabled",
+                "detection_multiplier": 3,
+                "min_rx_interval_ms": 50,
+                "min_tx_interval_ms": 50,
+                "echo_admin_state": "enabled",
+                "echo_rx_interval_ms": 50,
+                "slow_timer_ms": 2000,
+                "controls": ["passive-mode"],
+            },
+        ]
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfaceAttachment
+# ---------------------------------------------------------------------------
+
+
+class ACIBFDInterfaceAttachmentAPITests(
+    APIViewTestCases.GetObjectViewTestCase,
+    APIViewTestCases.ListObjectsViewTestCase,
+    APIViewTestCases.CreateObjectViewTestCase,
+    APIViewTestCases.UpdateObjectViewTestCase,
+    APIViewTestCases.DeleteObjectViewTestCase,
+    APITestCase,
+):
+    from netbox_cisco_aci.models.l3out import ACIBFDInterfaceAttachment
+
+    model = ACIBFDInterfaceAttachment
+    view_namespace = PLUGIN_API_NAMESPACE
+    brief_fields = [
+        "aci_bfd_interface_policy",
+        "aci_logical_interface_profile",
+        "description",
+        "display",
+        "id",
+        "url",
+    ]
+    bulk_update_data = {"description": "Bulk-updated"}
+
+    @classmethod
+    def setUpTestData(cls):
+        from netbox_cisco_aci.models.l3out import (
+            ACIBFDInterfaceAttachment,
+            ACIBFDInterfacePolicy,
+        )
+
+        fab = ACIFabric.objects.create(name="API-BFDAtt-Fab")
+        tenant = ACITenant.objects.create(aci_fabric=fab, name="t-bfd-att-api")
+        vrf = ACIVRF.objects.create(aci_tenant=tenant, name="vrf-bfd-att-api")
+        l3out = ACIL3Out.objects.create(aci_tenant=tenant, aci_vrf=vrf, name="l3out-bfd-att-api")
+        lnp = ACILogicalNodeProfile.objects.create(aci_l3out=l3out, name="lnp-bfd-att-api")
+        policy = ACIBFDInterfacePolicy.objects.create(aci_tenant=tenant, name="bfd-pol-att-api")
+
+        # 3 existing objects for GET / list tests — each needs its own LIP (OneToOneField)
+        lip_0 = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=lnp, name="lip-bfd-att-0"
+        )
+        lip_1 = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=lnp, name="lip-bfd-att-1"
+        )
+        lip_2 = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=lnp, name="lip-bfd-att-2"
+        )
+        ACIBFDInterfaceAttachment.objects.create(
+            aci_logical_interface_profile=lip_0,
+            aci_bfd_interface_policy=policy,
+            name="bfd-att-0",
+        )
+        ACIBFDInterfaceAttachment.objects.create(
+            aci_logical_interface_profile=lip_1,
+            aci_bfd_interface_policy=policy,
+            name="bfd-att-1",
+        )
+        ACIBFDInterfaceAttachment.objects.create(
+            aci_logical_interface_profile=lip_2,
+            aci_bfd_interface_policy=policy,
+            name="bfd-att-2",
+        )
+
+        # LIPs for create_data (no existing attachment, no PROTECT children on the top-3)
+        lip_new_a = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=lnp, name="lip-bfd-att-new-a"
+        )
+        lip_new_b = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=lnp, name="lip-bfd-att-new-b"
+        )
+        cls.create_data = [
+            {
+                "aci_logical_interface_profile": lip_new_a.pk,
+                "aci_bfd_interface_policy": policy.pk,
+            },
+            {
+                "aci_logical_interface_profile": lip_new_b.pk,
+                "aci_bfd_interface_policy": policy.pk,
+            },
+        ]

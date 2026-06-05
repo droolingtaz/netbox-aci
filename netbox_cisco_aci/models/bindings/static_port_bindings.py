@@ -139,3 +139,40 @@ class ACIStaticPortBinding(ACIBaseModel):
                         )
                     }
                 )
+
+        if self.aci_endpoint_group_id and self.encap_vlan is not None:
+            # Mirror the AAEP encap-reachability check, but following the
+            # EPG → ACIDomainBinding → ACIDomain → ACIVLANPool chain.
+            # If the EPG has no domain bindings yet, or none of the bound
+            # domains have a VLAN pool, we allow the config to proceed
+            # (same incremental-config tolerance as APIC).
+            from netbox_cisco_aci.models.access.vlan_pools import (
+                ACIVLANPoolBlock,
+            )
+            from netbox_cisco_aci.models.bindings.domain_bindings import (
+                ACIDomainBinding,
+            )
+
+            pool_ids = list(
+                ACIDomainBinding.objects.filter(aci_endpoint_group_id=self.aci_endpoint_group_id)
+                .exclude(aci_domain__aci_vlan_pool__isnull=True)
+                .values_list("aci_domain__aci_vlan_pool_id", flat=True)
+                .distinct()
+            )
+            if pool_ids:
+                covered = ACIVLANPoolBlock.objects.filter(
+                    aci_vlan_pool_id__in=pool_ids,
+                    from_vlan__lte=self.encap_vlan,
+                    to_vlan__gte=self.encap_vlan,
+                ).exists()
+                if not covered:
+                    raise ValidationError(
+                        {
+                            "encap_vlan": _(
+                                "Encap VLAN %(vlan)d is not covered by any VLAN pool block "
+                                "reachable through this EPG's domain bindings. Either expand "
+                                "a pool or bind a domain whose pool includes this VLAN."
+                            )
+                            % {"vlan": self.encap_vlan},
+                        }
+                    )

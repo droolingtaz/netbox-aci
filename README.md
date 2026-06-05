@@ -15,7 +15,7 @@ ACI policy applied to any device or port at a glance.
 [![codecov](https://codecov.io/gh/droolingtaz/netbox-cisco-aci/branch/main/graph/badge.svg?precision=1)](https://app.codecov.io/gh/droolingtaz/netbox-cisco-aci)
 [![PyPI](https://img.shields.io/pypi/v/netbox-cisco-aci?label=pypi&logo=pypi&logoColor=white)](https://pypi.org/project/netbox-cisco-aci/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://pypi.org/project/netbox-cisco-aci/)
-[![NetBox](https://img.shields.io/badge/netbox-4.5%20%7C%204.6-26a69a.svg)](COMPATIBILITY.md)
+[![NetBox](https://img.shields.io/badge/netbox-4.6-26a69a.svg)](COMPATIBILITY.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mkdocs--material-526CFE.svg)](https://droolingtaz.github.io/netbox-cisco-aci/)
 

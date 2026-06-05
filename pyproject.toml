@@ -23,7 +23,6 @@ keywords = ["netbox", "netbox-plugin", "cisco", "aci", "apic"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Django",
-    "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",

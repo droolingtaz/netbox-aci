@@ -453,3 +453,133 @@ class ACIInterfaceFabricMembershipExtraTests(_BindingFixture):
         # iface_b belongs to device_b, but node is a "non-device" type → should not raise
         m = ACIInterfaceFabricMembership(dcim_interface=self.iface_b, aci_node=node_vm)
         m.clean()
+
+
+# ---------------------------------------------------------------------------
+# ACIStaticPortBinding — encap-VLAN pool reachability check (Item 5)
+# ---------------------------------------------------------------------------
+
+
+class ACIStaticPortBindingEncapPoolTests(_BindingFixture):
+    """Tests for the encap-VLAN reachability check added in v0.2.0."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from netbox_cisco_aci.choices import (
+            DomainTypeChoices,
+            VLANPoolAllocationChoices,
+        )
+        from netbox_cisco_aci.models.access import ACIDomain, ACIVLANPool, ACIVLANPoolBlock
+        from netbox_cisco_aci.models.bindings import ACIDomainBinding
+
+        # VLAN pool: 100-200
+        cls.pool_encap = ACIVLANPool.objects.create(
+            aci_fabric=cls.fab,
+            name="pool-encap",
+            allocation_mode=VLANPoolAllocationChoices.STATIC,
+        )
+        cls.block_encap = ACIVLANPoolBlock.objects.create(
+            aci_vlan_pool=cls.pool_encap, name="blk-100-200", from_vlan=100, to_vlan=200
+        )
+        cls.dom_encap = ACIDomain.objects.create(
+            aci_fabric=cls.fab,
+            name="phys-encap",
+            domain_type=DomainTypeChoices.PHYSICAL,
+            aci_vlan_pool=cls.pool_encap,
+        )
+        ACIDomainBinding.objects.create(aci_endpoint_group=cls.epg, aci_domain=cls.dom_encap)
+
+    def test_no_domain_bindings_skips_check(self):
+        """If the EPG has no domain bindings, the check is bypassed."""
+
+        # Create a fresh EPG with no domain bindings
+        fresh_epg = ACIEndpointGroup.objects.create(
+            aci_tenant=self.tenant,
+            aci_app_profile=self.ap,
+            aci_bridge_domain=self.bd,
+            name="epg-no-bindings",
+        )
+        binding = ACIStaticPortBinding(
+            aci_endpoint_group=fresh_epg,
+            dcim_interface=self.iface_a,
+            encap_vlan=999,  # out of range
+        )
+        try:
+            binding.full_clean()
+        except ValidationError as exc:
+            if "encap_vlan" in getattr(exc, "message_dict", {}):
+                self.fail("Should skip check when EPG has no domain bindings")
+
+    def test_no_pool_on_domain_skips_check(self):
+        """If bound domains have no pool, the check is bypassed."""
+        from netbox_cisco_aci.choices import DomainTypeChoices
+        from netbox_cisco_aci.models.access import ACIDomain
+        from netbox_cisco_aci.models.bindings import ACIDomainBinding
+
+        dom_no_pool = ACIDomain.objects.create(
+            aci_fabric=self.fab, name="phys-no-pool-spb", domain_type=DomainTypeChoices.PHYSICAL
+        )
+        fresh_epg = ACIEndpointGroup.objects.create(
+            aci_tenant=self.tenant,
+            aci_app_profile=self.ap,
+            aci_bridge_domain=self.bd,
+            name="epg-no-pool",
+        )
+        ACIDomainBinding.objects.create(aci_endpoint_group=fresh_epg, aci_domain=dom_no_pool)
+        binding = ACIStaticPortBinding(
+            aci_endpoint_group=fresh_epg,
+            dcim_interface=self.iface_a,
+            encap_vlan=999,
+        )
+        try:
+            binding.full_clean()
+        except ValidationError as exc:
+            if "encap_vlan" in getattr(exc, "message_dict", {}):
+                self.fail("Should skip check when domain has no pool")
+
+    def test_encap_in_range_allowed(self):
+        binding = ACIStaticPortBinding(
+            aci_endpoint_group=self.epg,
+            dcim_interface=self.iface_a,
+            encap_vlan=150,
+        )
+        try:
+            binding.full_clean()
+        except ValidationError as exc:
+            if "encap_vlan" in getattr(exc, "message_dict", {}):
+                self.fail("Encap VLAN 150 is in range 100-200, should be allowed")
+
+    def test_encap_lower_bound_allowed(self):
+        binding = ACIStaticPortBinding(
+            aci_endpoint_group=self.epg,
+            dcim_interface=self.iface_a,
+            encap_vlan=100,
+        )
+        try:
+            binding.full_clean()
+        except ValidationError as exc:
+            if "encap_vlan" in getattr(exc, "message_dict", {}):
+                self.fail("Encap VLAN 100 is at lower bound, should be allowed")
+
+    def test_encap_upper_bound_allowed(self):
+        binding = ACIStaticPortBinding(
+            aci_endpoint_group=self.epg,
+            dcim_interface=self.iface_a,
+            encap_vlan=200,
+        )
+        try:
+            binding.full_clean()
+        except ValidationError as exc:
+            if "encap_vlan" in getattr(exc, "message_dict", {}):
+                self.fail("Encap VLAN 200 is at upper bound, should be allowed")
+
+    def test_encap_out_of_range_rejected(self):
+        binding = ACIStaticPortBinding(
+            aci_endpoint_group=self.epg,
+            dcim_interface=self.iface_a,
+            encap_vlan=201,
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            binding.full_clean()
+        self.assertIn("encap_vlan", ctx.exception.message_dict)

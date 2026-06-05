@@ -83,6 +83,9 @@ PLUGIN_MODELS = [
     # Phase 7.1 — Static routes
     "acil3outstaticroute",
     "acil3outstaticroutenexthop",
+    # v0.2.0 — BFD
+    "acibfdinterfacepolicy",
+    "acibfdinterfaceattachment",
 ]
 
 
@@ -130,3 +133,40 @@ class PluginURLPatternsTests(TestCase):
                         url.endswith(f"/{suffix}/"),
                         f"{label}_{suffix} resolved to {url!r} which does not end with /{suffix}/",
                     )
+
+
+class NavigationStructureTests(TestCase):
+    """Verify the 17-item, 6-group navigation shape is intact."""
+
+    def test_menu_has_six_groups(self):
+        from netbox_cisco_aci.navigation import menu
+
+        self.assertEqual(len(menu.groups), 6)
+
+    def test_menu_has_expected_items(self):
+        from netbox_cisco_aci.navigation import menu
+
+        total = sum(len(g.items) for g in menu.groups)
+        self.assertEqual(total, 19)  # 3+6+4+2+1+3
+
+    def test_group_item_counts(self):
+        from netbox_cisco_aci.navigation import menu
+
+        groups = {g.label: g.items for g in menu.groups}
+        self.assertEqual(len(groups["Fabric"]), 3)
+        self.assertEqual(len(groups["Tenancy"]), 6)
+        self.assertEqual(len(groups["Connectivity"]), 4)
+        self.assertEqual(len(groups["Contracts"]), 2)
+        self.assertEqual(len(groups["L3Outs"]), 1)
+        self.assertEqual(len(groups["Policies"]), 3)
+
+    def test_all_menu_urls_resolve(self):
+        from netbox_cisco_aci.navigation import menu
+
+        for g in menu.groups:
+            for item in g.items:
+                with self.subTest(link=item.link):
+                    try:
+                        reverse(item.link)
+                    except NoReverseMatch as exc:
+                        self.fail(f"Menu item {item.link} failed to resolve: {exc}")

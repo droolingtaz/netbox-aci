@@ -757,3 +757,187 @@ class ACIEIGRPInterfacePolicyExtraTests(_L3OutFixture):
     def test_get_absolute_url(self):
         p = ACIEIGRPInterfacePolicy.objects.create(aci_tenant=self.tenant, name="eigrp-url")
         self.assertIn(str(p.pk), p.get_absolute_url())
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfacePolicy + ACIBFDInterfaceAttachment — model tests
+# ---------------------------------------------------------------------------
+
+
+class _BFDFixture(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from netbox_cisco_aci.models.l3out import ACIBFDInterfaceAttachment, ACIBFDInterfacePolicy
+
+        cls.ACIBFDInterfacePolicy = ACIBFDInterfacePolicy
+        cls.ACIBFDInterfaceAttachment = ACIBFDInterfaceAttachment
+
+        cls.fab = ACIFabric.objects.create(name="DC-BFD")
+        cls.fab_common = ACIFabric.objects.create(name="DC-common")
+        cls.tenant = ACITenant.objects.create(aci_fabric=cls.fab, name="t-bfd")
+        cls.tenant_other = ACITenant.objects.create(aci_fabric=cls.fab, name="t-bfd-other")
+        cls.tenant_common = ACITenant.objects.create(aci_fabric=cls.fab, name="common")
+        cls.vrf = ACIVRF.objects.create(aci_tenant=cls.tenant, name="vrf-bfd")
+        cls.l3out = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant, aci_vrf=cls.vrf, name="l3out-bfd"
+        )
+        cls.lnp = ACILogicalNodeProfile.objects.create(aci_l3out=cls.l3out, name="lnp-bfd")
+        cls.lip = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=cls.lnp, name="lip-bfd"
+        )
+        cls.policy = ACIBFDInterfacePolicy.objects.create(
+            aci_tenant=cls.tenant, name="bfd-pol-main"
+        )
+        cls.policy_common = ACIBFDInterfacePolicy.objects.create(
+            aci_tenant=cls.tenant_common, name="bfd-pol-common"
+        )
+        cls.policy_other = ACIBFDInterfacePolicy.objects.create(
+            aci_tenant=cls.tenant_other, name="bfd-pol-other"
+        )
+
+
+class ACIBFDInterfacePolicyModelTests(_BFDFixture):
+    def test_str(self):
+        self.assertEqual(str(self.policy), "t-bfd / bfd-pol-main")
+
+    def test_get_absolute_url(self):
+        self.assertIn(str(self.policy.pk), self.policy.get_absolute_url())
+
+    def test_create_with_defaults(self):
+        p = self.ACIBFDInterfacePolicy.objects.create(aci_tenant=self.tenant, name="bfd-defaults")
+        self.assertEqual(p.detection_multiplier, 3)
+        self.assertEqual(p.min_rx_interval_ms, 50)
+        self.assertEqual(p.min_tx_interval_ms, 50)
+        self.assertEqual(p.echo_rx_interval_ms, 50)
+        self.assertEqual(p.slow_timer_ms, 2000)
+
+    def test_uniqueness_constraint(self):
+        from django.db import IntegrityError, transaction
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            self.ACIBFDInterfacePolicy.objects.create(aci_tenant=self.tenant, name="bfd-pol-main")
+
+    def test_same_name_different_tenant_ok(self):
+        p = self.ACIBFDInterfacePolicy.objects.create(
+            aci_tenant=self.tenant_other, name="bfd-pol-main"
+        )
+        self.assertIsNotNone(p.pk)
+
+
+class ACIBFDInterfaceAttachmentModelTests(_BFDFixture):
+    def test_auto_name_on_save(self):
+        att = self.ACIBFDInterfaceAttachment(
+            aci_logical_interface_profile=self.lip,
+            aci_bfd_interface_policy=self.policy,
+        )
+        att.save()
+        self.assertTrue(att.name.startswith("bfd_"))
+        att.delete()
+
+    def test_str(self):
+        att = self.ACIBFDInterfaceAttachment.objects.create(
+            aci_logical_interface_profile=self.lip,
+            aci_bfd_interface_policy=self.policy,
+            name="bfd-att-test",
+        )
+        self.assertIn("BFD", str(att))
+        att.delete()
+
+    def test_cross_tenant_guard_raises(self):
+        from django.core.exceptions import ValidationError
+
+        att = self.ACIBFDInterfaceAttachment(
+            aci_logical_interface_profile=self.lip,
+            aci_bfd_interface_policy=self.policy_other,
+            name="bfd-cross",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            att.full_clean()
+        self.assertIn("aci_bfd_interface_policy", ctx.exception.message_dict)
+
+    def test_common_tenant_policy_allowed(self):
+        from django.core.exceptions import ValidationError
+
+        att = self.ACIBFDInterfaceAttachment(
+            aci_logical_interface_profile=self.lip,
+            aci_bfd_interface_policy=self.policy_common,
+            name="bfd-common-ok",
+        )
+        try:
+            att.full_clean()
+        except ValidationError as exc:
+            if "aci_bfd_interface_policy" in exc.message_dict:
+                self.fail("Common-tenant policy should be allowed")
+
+
+# ---------------------------------------------------------------------------
+# ACIExternalEPGSubnet — VRF exact-match check (Item 6) — model tests
+# ---------------------------------------------------------------------------
+
+
+class ACIExternalEPGSubnetVRFCheckTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.fab = ACIFabric.objects.create(name="DC-EES")
+        cls.tenant = ACITenant.objects.create(aci_fabric=cls.fab, name="t-ees")
+        cls.vrf_a = ACIVRF.objects.create(aci_tenant=cls.tenant, name="vrf-a")
+        cls.vrf_b = ACIVRF.objects.create(aci_tenant=cls.tenant, name="vrf-b")
+        cls.l3out_a = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant, aci_vrf=cls.vrf_a, name="l3out-a"
+        )
+        cls.l3out_b_same_vrf = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant, aci_vrf=cls.vrf_a, name="l3out-b"
+        )
+        cls.l3out_c_diff_vrf = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant, aci_vrf=cls.vrf_b, name="l3out-c"
+        )
+        cls.epg_a = ACIExternalEPG.objects.create(aci_l3out=cls.l3out_a, name="epg-a")
+        cls.epg_b = ACIExternalEPG.objects.create(aci_l3out=cls.l3out_b_same_vrf, name="epg-b")
+        cls.epg_c = ACIExternalEPG.objects.create(aci_l3out=cls.l3out_c_diff_vrf, name="epg-c")
+
+    def test_single_subnet_single_l3out_allowed(self):
+        from django.core.exceptions import ValidationError
+
+        sub = ACIExternalEPGSubnet(aci_external_epg=self.epg_a, prefix="10.0.0.0/8")
+        try:
+            sub.full_clean()
+        except ValidationError as exc:
+            if "prefix" in getattr(exc, "message_dict", {}):
+                self.fail("Single subnet in single L3Out should be allowed")
+
+    def test_duplicate_same_l3out_rejected(self):
+        """DB uniqueness: same prefix on same EPG is blocked by unique constraint."""
+        from django.core.exceptions import ValidationError
+
+        ACIExternalEPGSubnet.objects.create(
+            aci_external_epg=self.epg_a, prefix="10.0.0.0/8", name="sub-a1"
+        )
+        sub2 = ACIExternalEPGSubnet(aci_external_epg=self.epg_a, prefix="10.0.0.0/8")
+        with self.assertRaises(ValidationError):
+            sub2.full_clean()
+
+    def test_duplicate_diff_l3out_same_vrf_rejected(self):
+        """Same prefix on different L3Outs sharing the same VRF must be rejected."""
+        from django.core.exceptions import ValidationError
+
+        ACIExternalEPGSubnet.objects.create(
+            aci_external_epg=self.epg_a, prefix="172.16.0.0/12", name="sub-b1"
+        )
+        sub2 = ACIExternalEPGSubnet(aci_external_epg=self.epg_b, prefix="172.16.0.0/12")
+        with self.assertRaises(ValidationError) as ctx:
+            sub2.full_clean()
+        self.assertIn("prefix", ctx.exception.message_dict)
+
+    def test_duplicate_diff_vrf_allowed(self):
+        """Same prefix on different VRFs should be allowed."""
+        from django.core.exceptions import ValidationError
+
+        ACIExternalEPGSubnet.objects.create(
+            aci_external_epg=self.epg_a, prefix="192.168.0.0/16", name="sub-c1"
+        )
+        sub2 = ACIExternalEPGSubnet(aci_external_epg=self.epg_c, prefix="192.168.0.0/16")
+        try:
+            sub2.full_clean()
+        except ValidationError as exc:
+            if "prefix" in getattr(exc, "message_dict", {}):
+                self.fail("Same prefix in different VRF should be allowed")

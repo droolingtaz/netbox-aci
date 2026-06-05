@@ -1,5 +1,6 @@
-"""ACI L3Out object family (Phase 7 + 7.1)."""
+"""ACI L3Out object family (Phase 7 + 7.1 + v0.2.0 BFD)."""
 
+from .bfd import ACIBFDInterfaceAttachment, ACIBFDInterfacePolicy
 from .bgp_peer import ACIBGPPeer
 from .eigrp import ACIEIGRPInterfacePolicy
 from .external_epg import ACIExternalEPG, ACIExternalEPGSubnet
@@ -12,6 +13,8 @@ from .ospf import ACIOSPFInterfaceAttachment, ACIOSPFInterfacePolicy
 from .static_route import ACIL3OutStaticRoute, ACIL3OutStaticRouteNextHop
 
 __all__ = (
+    "ACIBFDInterfaceAttachment",
+    "ACIBFDInterfacePolicy",
     "ACIBGPPeer",
     "ACIEIGRPInterfacePolicy",
     "ACIExternalEPG",

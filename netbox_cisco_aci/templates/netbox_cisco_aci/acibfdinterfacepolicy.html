@@ -1,0 +1,33 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "BFD Interface Policy" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "Name" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "Alias" %}</th><td>{{ object.name_alias|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Tenant" %}</th>
+          <td><a href="{{ object.aci_tenant.get_absolute_url }}">{{ object.aci_tenant }}</a></td></tr>
+        <tr><th scope="row">{% trans "Admin state" %}</th><td>{{ object.get_admin_state_display }}</td></tr>
+        <tr><th scope="row">{% trans "Detection multiplier" %}</th><td>{{ object.detection_multiplier }}</td></tr>
+        <tr><th scope="row">{% trans "Min Rx interval (ms)" %}</th><td>{{ object.min_rx_interval_ms }}</td></tr>
+        <tr><th scope="row">{% trans "Min Tx interval (ms)" %}</th><td>{{ object.min_tx_interval_ms }}</td></tr>
+        <tr><th scope="row">{% trans "Echo admin state" %}</th><td>{{ object.get_echo_admin_state_display }}</td></tr>
+        <tr><th scope="row">{% trans "Echo Rx interval (ms)" %}</th><td>{{ object.echo_rx_interval_ms }}</td></tr>
+        <tr><th scope="row">{% trans "Slow timer (ms)" %}</th><td>{{ object.slow_timer_ms }}</td></tr>
+        <tr><th scope="row">{% trans "Controls" %}</th><td>{{ object.controls|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">
+    {% include 'inc/panels/comments.html' %}
+  </div>
+</div>
+{% endblock %}

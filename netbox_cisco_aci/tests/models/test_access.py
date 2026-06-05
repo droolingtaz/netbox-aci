@@ -399,3 +399,136 @@ class ACIAAEPEPGMappingEncapPoolValidationTests(_AccessFixture):
             encap_vlan=450,
         )
         m.full_clean()
+
+
+# ---------------------------------------------------------------------------
+# ACIAAEPDomainAssociation — overlapping VLAN check (Item 7) — model tests
+# ---------------------------------------------------------------------------
+
+
+class ACIAAEPDomainOverlapTests(_AccessFixture):
+    """Tests for the overlapping-VLAN guard added in v0.2.0."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        # pool-a: 100-200  (already created via _AccessFixture: cls.pool with cls.domain)
+        ACIVLANPoolBlock.objects.create(
+            aci_vlan_pool=cls.pool, name="blk-a", from_vlan=100, to_vlan=200
+        )
+
+        # pool-b: 300-400 — non-overlapping
+        cls.pool_b = ACIVLANPool.objects.create(
+            aci_fabric=cls.fab,
+            name="pool-b",
+            allocation_mode=VLANPoolAllocationChoices.STATIC,
+        )
+        ACIVLANPoolBlock.objects.create(
+            aci_vlan_pool=cls.pool_b, name="blk-b", from_vlan=300, to_vlan=400
+        )
+        cls.domain_b = ACIDomain.objects.create(
+            aci_fabric=cls.fab,
+            name="phys-b",
+            domain_type=DomainTypeChoices.PHYSICAL,
+            aci_vlan_pool=cls.pool_b,
+        )
+
+        # pool-c: 150-250 — overlaps pool-a
+        cls.pool_c = ACIVLANPool.objects.create(
+            aci_fabric=cls.fab,
+            name="pool-c",
+            allocation_mode=VLANPoolAllocationChoices.STATIC,
+        )
+        ACIVLANPoolBlock.objects.create(
+            aci_vlan_pool=cls.pool_c, name="blk-c", from_vlan=150, to_vlan=250
+        )
+        cls.domain_c = ACIDomain.objects.create(
+            aci_fabric=cls.fab,
+            name="phys-c",
+            domain_type=DomainTypeChoices.PHYSICAL,
+            aci_vlan_pool=cls.pool_c,
+        )
+
+        # domain with no pool
+        cls.domain_no_pool = ACIDomain.objects.create(
+            aci_fabric=cls.fab,
+            name="phys-no-pool",
+            domain_type=DomainTypeChoices.PHYSICAL,
+        )
+
+        # Attach domain (pool-a) to the AAEP first
+        ACIAAEPDomainAssociation.objects.create(aci_aaep=cls.aaep, aci_domain=cls.domain)
+
+    def test_non_overlapping_pools_allowed(self):
+        """Two domains with non-overlapping pools should be accepted."""
+        from django.core.exceptions import ValidationError
+
+        assoc = ACIAAEPDomainAssociation(aci_aaep=self.aaep, aci_domain=self.domain_b)
+        try:
+            assoc.full_clean()
+        except ValidationError as exc:
+            if "aci_domain" in getattr(exc, "message_dict", {}):
+                self.fail("Non-overlapping pools should be allowed")
+
+    def test_same_pool_allowed(self):
+        """Two domains sharing the same pool must not trigger the overlap guard."""
+        from django.core.exceptions import ValidationError
+
+        # Create another domain pointing at pool-a
+        domain_same_pool = ACIDomain.objects.create(
+            aci_fabric=self.fab,
+            name="phys-same-pool",
+            domain_type=DomainTypeChoices.PHYSICAL,
+            aci_vlan_pool=self.pool,
+        )
+        assoc = ACIAAEPDomainAssociation(aci_aaep=self.aaep, aci_domain=domain_same_pool)
+        try:
+            assoc.full_clean()
+        except ValidationError as exc:
+            if "aci_domain" in getattr(exc, "message_dict", {}):
+                self.fail("Same pool should not trigger overlap guard")
+
+    def test_overlapping_pools_rejected(self):
+        """Two domains with overlapping VLAN blocks must raise a ValidationError."""
+        from django.core.exceptions import ValidationError
+
+        assoc = ACIAAEPDomainAssociation(aci_aaep=self.aaep, aci_domain=self.domain_c)
+        with self.assertRaises(ValidationError) as ctx:
+            assoc.full_clean()
+        self.assertIn("aci_domain", ctx.exception.message_dict)
+
+    def test_adjacent_non_overlapping_allowed(self):
+        """Blocks 100-200 and 201-300 are adjacent but don't overlap — must be allowed."""
+        from django.core.exceptions import ValidationError
+
+        pool_adj = ACIVLANPool.objects.create(
+            aci_fabric=self.fab,
+            name="pool-adj",
+            allocation_mode=VLANPoolAllocationChoices.STATIC,
+        )
+        ACIVLANPoolBlock.objects.create(
+            aci_vlan_pool=pool_adj, name="blk-adj", from_vlan=201, to_vlan=300
+        )
+        domain_adj = ACIDomain.objects.create(
+            aci_fabric=self.fab,
+            name="phys-adj",
+            domain_type=DomainTypeChoices.PHYSICAL,
+            aci_vlan_pool=pool_adj,
+        )
+        assoc = ACIAAEPDomainAssociation(aci_aaep=self.aaep, aci_domain=domain_adj)
+        try:
+            assoc.full_clean()
+        except ValidationError as exc:
+            if "aci_domain" in getattr(exc, "message_dict", {}):
+                self.fail("Adjacent non-overlapping blocks should be allowed")
+
+    def test_domain_no_pool_skips_check(self):
+        """Domain with no VLAN pool should skip the overlap check."""
+        from django.core.exceptions import ValidationError
+
+        assoc = ACIAAEPDomainAssociation(aci_aaep=self.aaep, aci_domain=self.domain_no_pool)
+        try:
+            assoc.full_clean()
+        except ValidationError as exc:
+            if "aci_domain" in getattr(exc, "message_dict", {}):
+                self.fail("Domain with no pool should skip the overlap check")

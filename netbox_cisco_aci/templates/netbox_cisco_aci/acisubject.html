@@ -26,7 +26,7 @@
   </div>
   <div class="col col-md-6">
     <div class="card">
-      <h2 class="card-header">{% trans "Filter Attachments" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Filter Attachments" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acisubjectfilter_add' %}?aci_subject={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         <thead><tr><th>Filter</th><th>Direction</th><th>Action</th></tr></thead>
         {% for fa in object.filter_attachments.all %}

@@ -16,7 +16,7 @@
       </table>
     </div>
     <div class="card">
-      <h2 class="card-header">{% trans "Interface selectors" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Interface selectors" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciinterfaceprofileselector_add' %}?aci_interface_profile={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Range" %}</th><th>{% trans "Policy Group" %}</th></tr></thead>
         {% for sel in object.selectors.all %}

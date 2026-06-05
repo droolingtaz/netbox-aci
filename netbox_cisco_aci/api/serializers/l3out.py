@@ -5,6 +5,8 @@ from netbox.api.serializers import NetBoxModelSerializer
 from rest_framework import serializers
 
 from ...models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -565,5 +567,91 @@ class ACIL3OutStaticRouteNextHopSerializer(_AutoNameMixin, NetBoxModelSerializer
             "id",
             "nexthop_address",
             "nexthop_type",
+            "url",
+        )
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfacePolicy
+# ---------------------------------------------------------------------------
+
+
+class ACIBFDInterfacePolicySerializer(NetBoxModelSerializer):
+    url = _url("acibfdinterfacepolicy")
+    aci_tenant = ACITenantSerializer(nested=True)
+
+    class Meta:
+        model = ACIBFDInterfacePolicy
+        fields = (
+            "id",
+            "url",
+            "display",
+            "name",
+            "name_alias",
+            "aci_tenant",
+            "admin_state",
+            "detection_multiplier",
+            "min_rx_interval_ms",
+            "min_tx_interval_ms",
+            "echo_admin_state",
+            "echo_rx_interval_ms",
+            "slow_timer_ms",
+            "controls",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "aci_tenant",
+            "admin_state",
+            "description",
+            "display",
+            "id",
+            "name",
+            "url",
+        )
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfaceAttachment
+# ---------------------------------------------------------------------------
+
+
+class ACIBFDInterfaceAttachmentSerializer(_AutoNameMixin, NetBoxModelSerializer):
+    url = _url("acibfdinterfaceattachment")
+    aci_logical_interface_profile = ACILogicalInterfaceProfileSerializer(nested=True)
+    aci_bfd_interface_policy = ACIBFDInterfacePolicySerializer(nested=True)
+    name = serializers.CharField(required=False, allow_blank=True, max_length=64)
+
+    def _derive_name(self, attrs: dict) -> str:
+        lip = attrs.get("aci_logical_interface_profile")
+        if not lip:
+            return ""
+        return _clean_name(f"bfd_{getattr(lip, 'name', '')}")
+
+    class Meta:
+        model = ACIBFDInterfaceAttachment
+        fields = (
+            "id",
+            "url",
+            "display",
+            "name",
+            "name_alias",
+            "aci_logical_interface_profile",
+            "aci_bfd_interface_policy",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "aci_bfd_interface_policy",
+            "aci_logical_interface_profile",
+            "description",
+            "display",
+            "id",
             "url",
         )

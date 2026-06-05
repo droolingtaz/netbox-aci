@@ -47,6 +47,8 @@ from .views.contracts import (
 )
 from .views.fabric import ACIFabricViewSet, ACINodeViewSet, ACIPodViewSet
 from .views.l3out import (
+    ACIBFDInterfaceAttachmentViewSet,
+    ACIBFDInterfacePolicyViewSet,
     ACIBGPPeerViewSet,
     ACIEIGRPInterfacePolicyViewSet,
     ACIExternalEPGSubnetViewSet,
@@ -145,5 +147,9 @@ router.register("external-epg-subnets", ACIExternalEPGSubnetViewSet)
 # Phase 7.1 — L3Out Static Routes
 router.register("static-routes", ACIL3OutStaticRouteViewSet)
 router.register("static-route-next-hops", ACIL3OutStaticRouteNextHopViewSet)
+
+# v0.2.0 — BFD
+router.register("bfd-interface-policies", ACIBFDInterfacePolicyViewSet)
+router.register("bfd-interface-attachments", ACIBFDInterfaceAttachmentViewSet)
 
 urlpatterns = router.urls

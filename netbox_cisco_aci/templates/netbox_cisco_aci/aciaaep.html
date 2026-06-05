@@ -17,7 +17,7 @@
       </table>
     </div>
     <div class="card">
-      <h2 class="card-header">{% trans "Domains" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Domains" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciaaepdomain_add' %}?aci_aaep={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         {% for d in object.domains.all %}
           <tr>
@@ -34,7 +34,7 @@
   </div>
   <div class="col col-md-6">
     <div class="card">
-      <h2 class="card-header">{% trans "EPG Mappings" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "EPG Mappings" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciaaepepgmapping_add' %}?aci_aaep={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         <thead><tr><th>EPG</th><th>VLAN</th><th>Mode</th></tr></thead>
         {% for m in object.epg_mappings.all %}

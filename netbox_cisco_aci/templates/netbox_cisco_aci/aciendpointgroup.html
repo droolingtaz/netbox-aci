@@ -30,7 +30,7 @@
   <div class="col col-md-6">
     {% if object.is_useg %}
     <div class="card">
-      <h2 class="card-header">{% trans "uSeg Attributes" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "uSeg Attributes" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciusegattribute_add' %}?aci_endpoint_group={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         {% for a in object.useg_attributes.all %}
           <tr>

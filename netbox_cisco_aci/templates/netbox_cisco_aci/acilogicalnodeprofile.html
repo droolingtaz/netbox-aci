@@ -20,6 +20,26 @@
     {% include 'inc/panels/custom_fields.html' %}
   </div>
   <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Logical Nodes" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acilogicalnode_add' %}?aci_logical_node_profile={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for ln in object.logical_nodes.all %}
+          <tr><td><a href="{{ ln.get_absolute_url }}">{{ ln.name }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No logical nodes." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Logical Interface Profiles" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acilogicalinterfaceprofile_add' %}?aci_logical_node_profile={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for lip in object.logical_interface_profiles.all %}
+          <tr><td><a href="{{ lip.get_absolute_url }}">{{ lip.name }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No logical interface profiles." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
     {% include 'inc/panels/comments.html' %}
   </div>
 </div>

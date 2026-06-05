@@ -29,7 +29,7 @@
   </div>
   <div class="col col-md-6">
     <div class="card">
-      <h2 class="card-header">{% trans "Subnets" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Subnets" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acibridgedomainsubnet_add' %}?aci_bridge_domain={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         {% for s in object.subnets.all %}
           <tr>
