@@ -144,9 +144,31 @@ class ACIBridgeDomainSubnet(ACITenantBaseModel):
         verbose_name=_("ACI Bridge Domain"),
     )
     gateway_ip = models.CharField(
-        verbose_name=_("Gateway IP"),
+        verbose_name=_("Gateway IP (legacy)"),
         max_length=64,
-        help_text=_("Gateway IP in CIDR form, e.g. 10.0.0.1/24."),
+        blank=True,
+        help_text=_(
+            "DEPRECATED: free-form gateway IP in CIDR notation (e.g. "
+            "``10.0.0.1/24``). Prefer the IPAM-linked field below for "
+            "new subnets so the gateway is reachable from search, "
+            "audits, and IPAM utilisation reports. This field will be "
+            "removed in a future major release; ``gateway_ipam_ip_address`` "
+            "is its replacement."
+        ),
+    )
+    gateway_ipam_ip_address = models.ForeignKey(
+        to="ipam.IPAddress",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        blank=True,
+        null=True,
+        verbose_name=_("Gateway IP (IPAM)"),
+        help_text=_(
+            "Preferred: link to an existing ``ipam.IPAddress`` representing "
+            "the BD gateway. When set, takes precedence over the legacy "
+            "free-form ``gateway_ip`` field for display, search, and "
+            "reporting."
+        ),
     )
     nb_prefix = models.ForeignKey(
         to="ipam.Prefix",
@@ -186,17 +208,56 @@ class ACIBridgeDomainSubnet(ACITenantBaseModel):
         verbose_name_plural = _("ACI BD Subnets")
         ordering = ("aci_bridge_domain", "gateway_ip")
         constraints = (
+            # Per-BD uniqueness on each representation. Both are partial
+            # so blank/NULL rows on either column don't trigger a clash.
+            # `clean()` ensures at least one of the two is set.
             models.UniqueConstraint(
                 fields=("aci_bridge_domain", "gateway_ip"),
+                condition=~models.Q(gateway_ip=""),
                 name="netbox_cisco_aci_acibdsubnet_bd_gw_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("aci_bridge_domain", "gateway_ipam_ip_address"),
+                condition=models.Q(gateway_ipam_ip_address__isnull=False),
+                name="netbox_cisco_aci_acibdsubnet_bd_ipam_unique",
             ),
         )
 
     def __str__(self) -> str:
-        return f"{self.aci_bridge_domain} / {self.gateway_ip}"
+        return f"{self.aci_bridge_domain} / {self.display_gateway}"
+
+    @property
+    def display_gateway(self) -> str:
+        """Human-friendly gateway string preferring the IPAM FK when set.
+
+        Used in templates, search results, and ``__str__``. Falls back to
+        the legacy free-form ``gateway_ip`` field when the IPAM FK is
+        unset, then to a placeholder string when both are blank (which
+        ``clean()`` refuses, but render-time defensive defaults are
+        still cheap).
+        """
+        if self.gateway_ipam_ip_address_id:
+            return str(self.gateway_ipam_ip_address)
+        if self.gateway_ip:
+            return self.gateway_ip
+        return "-"
 
     def get_absolute_url(self) -> str:
         return reverse("plugins:netbox_cisco_aci:acibridgedomainsubnet", args=[self.pk])
+
+    def clean(self) -> None:
+        super().clean()
+        # The user has to identify a gateway one way or the other. Both
+        # blank is meaningless; both set is allowed (the IPAM FK wins for
+        # display, the legacy string still tracks for audit until the
+        # field is removed in a future major release).
+        if not self.gateway_ip and not self.gateway_ipam_ip_address_id:
+            raise ValidationError(
+                _(
+                    "Either ``Gateway IP (IPAM)`` (preferred) or the legacy "
+                    "``Gateway IP`` text field must be provided."
+                )
+            )
 
     @property
     def aci_tenant(self):

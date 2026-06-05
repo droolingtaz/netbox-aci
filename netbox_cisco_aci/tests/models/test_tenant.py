@@ -3,6 +3,7 @@
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
+from ipam.models import IPAddress
 
 from netbox_cisco_aci.models.fabric import ACIFabric
 from netbox_cisco_aci.models.tenant import (
@@ -76,6 +77,66 @@ class ACIBridgeDomainSubnetTests(_TenancyFixture):
         with self.assertRaises(IntegrityError):
             ACIBridgeDomainSubnet.objects.create(
                 aci_bridge_domain=self.bd, name="dup", gateway_ip="10.0.0.1/24"
+            )
+
+    def test_both_blank_rejected(self):
+        """clean() must reject a row with neither gateway representation set."""
+        subnet = ACIBridgeDomainSubnet(aci_bridge_domain=self.bd, name="neither")
+        with self.assertRaises(ValidationError):
+            subnet.full_clean()
+
+    def test_only_legacy_set_allowed(self):
+        """Legacy free-form gateway alone is still a valid representation."""
+        ACIBridgeDomainSubnet(
+            aci_bridge_domain=self.bd, name="legacy-only", gateway_ip="10.1.0.1/24"
+        ).full_clean()
+
+    def test_only_ipam_set_allowed(self):
+        """IPAM-linked gateway alone is the preferred representation."""
+        ip = IPAddress.objects.create(address="10.2.0.1/24")
+        ACIBridgeDomainSubnet(
+            aci_bridge_domain=self.bd, name="ipam-only", gateway_ipam_ip_address=ip
+        ).full_clean()
+
+    def test_both_set_allowed(self):
+        """Both representations on one row is allowed during deprecation."""
+        ip = IPAddress.objects.create(address="10.3.0.1/24")
+        ACIBridgeDomainSubnet(
+            aci_bridge_domain=self.bd,
+            name="both",
+            gateway_ip="10.3.0.1/24",
+            gateway_ipam_ip_address=ip,
+        ).full_clean()
+
+    def test_display_gateway_prefers_ipam(self):
+        """When both fields are set, display_gateway uses the IPAM FK."""
+        ip = IPAddress.objects.create(address="10.4.0.1/24")
+        subnet = ACIBridgeDomainSubnet.objects.create(
+            aci_bridge_domain=self.bd,
+            name="prefers-ipam",
+            gateway_ip="10.4.0.1/24",
+            gateway_ipam_ip_address=ip,
+        )
+        self.assertEqual(subnet.display_gateway, str(ip))
+
+    def test_display_gateway_falls_back_to_legacy(self):
+        """With only the legacy field set, display_gateway returns it verbatim."""
+        subnet = ACIBridgeDomainSubnet.objects.create(
+            aci_bridge_domain=self.bd,
+            name="legacy-display",
+            gateway_ip="10.5.0.1/24",
+        )
+        self.assertEqual(subnet.display_gateway, "10.5.0.1/24")
+
+    def test_unique_ipam_gateway_inside_bd(self):
+        """The IPAM partial-unique constraint also fires per-BD."""
+        ip = IPAddress.objects.create(address="10.6.0.1/24")
+        ACIBridgeDomainSubnet.objects.create(
+            aci_bridge_domain=self.bd, name="ipam-1", gateway_ipam_ip_address=ip
+        )
+        with self.assertRaises(IntegrityError):
+            ACIBridgeDomainSubnet.objects.create(
+                aci_bridge_domain=self.bd, name="ipam-2", gateway_ipam_ip_address=ip
             )
 
 

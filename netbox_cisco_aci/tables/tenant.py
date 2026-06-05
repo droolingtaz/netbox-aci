@@ -135,7 +135,8 @@ class ACIBridgeDomainTable(NetBoxTable):
 
 class ACIBridgeDomainSubnetTable(NetBoxTable):
     aci_bridge_domain = tables.Column(linkify=True, verbose_name="Bridge Domain")
-    gateway_ip = tables.Column(linkify=True, verbose_name="Gateway IP")
+    gateway_ipam_ip_address = tables.Column(linkify=True, verbose_name="Gateway (IPAM)")
+    gateway_ip = tables.Column(linkify=True, verbose_name="Gateway (legacy)")
     nb_prefix = tables.Column(linkify=True, verbose_name="NetBox prefix")
     is_primary = columns.BooleanColumn(verbose_name="Primary")
     tags = columns.TagColumn(url_name="plugins:netbox_cisco_aci:acibridgedomainsubnet_list")
@@ -146,6 +147,7 @@ class ACIBridgeDomainSubnetTable(NetBoxTable):
             "pk",
             "id",
             "aci_bridge_domain",
+            "gateway_ipam_ip_address",
             "gateway_ip",
             "nb_prefix",
             "scope_public",
@@ -155,8 +157,12 @@ class ACIBridgeDomainSubnetTable(NetBoxTable):
             "description",
             "tags",
         )
+        # Showing the IPAM column by default nudges operators toward the
+        # preferred field. The legacy column stays available via the
+        # column picker for users with mixed data.
         default_columns = (
             "aci_bridge_domain",
+            "gateway_ipam_ip_address",
             "gateway_ip",
             "scope_public",
             "scope_shared",

@@ -33,7 +33,9 @@
       <table class="table table-hover attr-table">
         {% for s in object.subnets.all %}
           <tr>
-            <td><a href="{{ s.get_absolute_url }}">{{ s.gateway_ip }}</a></td>
+            {# Prefer the IPAM FK; fall back to the legacy text field. #}
+            {# `display_gateway` already encapsulates that precedence.    #}
+            <td><a href="{{ s.get_absolute_url }}">{{ s.display_gateway }}</a></td>
             <td>{% if s.is_primary %}<span class="badge text-bg-primary">primary</span>{% endif %}</td>
           </tr>
         {% empty %}
