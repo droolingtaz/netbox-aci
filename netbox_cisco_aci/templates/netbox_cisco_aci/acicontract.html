@@ -23,7 +23,7 @@
   </div>
   <div class="col col-md-6">
     <div class="card">
-      <h2 class="card-header">{% trans "Subjects" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Subjects" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acisubject_add' %}?aci_contract={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         {% for s in object.subjects.all %}
           <tr><td><a href="{{ s.get_absolute_url }}">{{ s.name }}</a></td></tr>
@@ -33,7 +33,7 @@
       </table>
     </div>
     <div class="card">
-      <h2 class="card-header">{% trans "Relations" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Relations" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acicontractrelation_add' %}?aci_contract={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         <thead><tr><th>Role</th><th>Target</th></tr></thead>
         {% for r in object.relations.all %}

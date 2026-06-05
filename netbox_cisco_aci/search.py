@@ -37,6 +37,8 @@ from .models.contracts import (
 )
 from .models.fabric import ACIFabric, ACINode, ACIPod
 from .models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -306,6 +308,18 @@ class ACIInterfaceFabricMembershipIndex(SearchIndex):
 
 
 # Phase 7 — L3Outs
+
+
+@register_search
+class ACIBFDInterfacePolicyIndex(SearchIndex):
+    model = ACIBFDInterfacePolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACIBFDInterfaceAttachmentIndex(SearchIndex):
+    model = ACIBFDInterfaceAttachment
+    fields = (("name", 100), ("description", 500))
 
 
 @register_search

@@ -1,4 +1,10 @@
-"""Top-level NetBox navigation entries for the plugin."""
+"""Top-level NetBox navigation entries for the plugin.
+
+Navigation v0.2.0: reduced from 52 items to 17.
+Child models (selectors, attachments, sub-entries, per-port policies,
+all L3Out children) are removed from the sidebar but remain fully
+reachable via URL routes and parent detail-page panels.
+"""
 
 from netbox.plugins import PluginMenu, PluginMenuButton, PluginMenuItem
 
@@ -23,73 +29,33 @@ fabric_items = (
     _item("acinode", "Nodes"),
 )
 
-access_items = (
-    _item("acivlanpool", "VLAN Pools"),
-    _item("acivlanpoolblock", "VLAN Pool Blocks"),
-    _item("acidomain", "Domains"),
-    _item("aciaaep", "AAEPs"),
-    _item("aciaaepepgmapping", "AAEP → EPG Mappings"),
-)
-
-interface_policy_items = (
-    _item("acilinklevelpolicy", "Link Level"),
-    _item("acicdpinterfacepolicy", "CDP"),
-    _item("acilldpinterfacepolicy", "LLDP"),
-    _item("acilacpinterfacepolicy", "LACP"),
-    _item("acimcpinterfacepolicy", "MCP"),
-    _item("acistpinterfacepolicy", "STP"),
-    _item("aciinterfacepolicygroup", "Policy Groups"),
-)
-
-access_profile_items = (
-    _item("aciswitchprofile", "Switch Profiles"),
-    _item("aciswitchprofileselector", "Switch Profile Selectors"),
-    _item("aciinterfaceprofile", "Interface Profiles"),
-    _item("aciinterfaceprofileselector", "Interface Profile Selectors"),
-    _item("aciswitchprofileinterfaceprofileattachment", "Switch ↔ Interface Attachments"),
-)
-
-contract_items = (
-    _item("acicontract", "Contracts"),
-    _item("acisubject", "Subjects"),
-    _item("acisubjectfilter", "Subject Filters"),
-    _item("acifilter", "Filters"),
-    _item("acifilterentry", "Filter Entries"),
-    _item("acicontractrelation", "Contract Relations"),
-)
-
-binding_items = (
-    _item("acistaticportbinding", "Static Port Bindings"),
-    _item("acivpcbindingpair", "vPC Binding Pairs"),
-    _item("acidomainbinding", "Domain Bindings"),
-    _item("aciinterfacefabricmembership", "Interface Fabric Memberships"),
-)
-
-l3out_items = (
-    _item("acil3out", "L3Outs"),
-    _item("acilogicalnodeprofile", "Logical Node Profiles"),
-    _item("acilogicalnode", "Logical Nodes"),
-    _item("acilogicalinterfaceprofile", "Logical Interface Profiles"),
-    _item("acil3outinterface", "L3Out Interfaces"),
-    _item("acibgppeer", "BGP Peers"),
-    _item("aciospfinterfacepolicy", "OSPF Interface Policies"),
-    _item("aciospfinterfaceattachment", "OSPF Interface Attachments"),
-    _item("acieigrpinterfacepolicy", "EIGRP Interface Policies"),
-    _item("acil3outstaticroute", "L3Out Static Routes"),
-    _item("acil3outstaticroutenexthop", "L3Out Static Route Next Hops"),
-    _item("aciexternalepg", "External EPGs"),
-    _item("aciexternalepgsubnet", "External EPG Subnets"),
-)
-
 tenancy_items = (
     _item("acitenant", "Tenants"),
     _item("acivrf", "VRFs"),
     _item("acibridgedomain", "Bridge Domains"),
-    _item("acibridgedomainsubnet", "BD Subnets"),
     _item("aciappprofile", "Application Profiles"),
     _item("aciendpointgroup", "Endpoint Groups"),
-    _item("aciusegattribute", "uSeg Attributes"),
     _item("aciendpointsecuritygroup", "Endpoint Security Groups"),
+)
+
+connectivity_items = (
+    _item("aciaaep", "AAEPs"),
+    _item("acidomain", "Domains"),
+    _item("acivlanpool", "VLAN Pools"),
+    _item("acistaticportbinding", "Static Port Bindings"),
+)
+
+contract_items = (
+    _item("acicontract", "Contracts"),
+    _item("acifilter", "Filters"),
+)
+
+l3out_items = (_item("acil3out", "L3Outs"),)
+
+policy_items = (
+    _item("aciinterfacepolicygroup", "Interface Policy Groups"),
+    _item("aciswitchprofile", "Switch Profiles"),
+    _item("aciinterfaceprofile", "Interface Profiles"),
 )
 
 menu = PluginMenu(
@@ -97,12 +63,10 @@ menu = PluginMenu(
     groups=(
         ("Fabric", fabric_items),
         ("Tenancy", tenancy_items),
-        ("Access Policies", access_items),
-        ("Interface Policies", interface_policy_items),
-        ("Access Profiles", access_profile_items),
+        ("Connectivity", connectivity_items),
         ("Contracts", contract_items),
-        ("Static Port Bindings", binding_items),
         ("L3Outs", l3out_items),
+        ("Policies", policy_items),
     ),
     icon_class="mdi mdi-server-network",
 )

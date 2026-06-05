@@ -42,6 +42,8 @@ from ..models.contracts import (
 )
 from ..models.fabric import ACIFabric, ACINode, ACIPod
 from ..models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -262,6 +264,16 @@ class ACIInterfaceFabricMembershipType:
     pass
 
 
+@strawberry_django.type(ACIBFDInterfacePolicy, fields="__all__")
+class ACIBFDInterfacePolicyType:
+    pass
+
+
+@strawberry_django.type(ACIBFDInterfaceAttachment, fields="__all__")
+class ACIBFDInterfaceAttachmentType:
+    pass
+
+
 @strawberry_django.type(ACIL3Out, fields="__all__")
 class ACIL3OutType:
     pass
@@ -457,6 +469,14 @@ class Query:
         strawberry_django.field()
     )
     aci_interface_fabric_membership_list: list[ACIInterfaceFabricMembershipType] = (
+        strawberry_django.field()
+    )
+
+    aci_bfd_interface_policy: ACIBFDInterfacePolicyType | None = strawberry_django.field()
+    aci_bfd_interface_policy_list: list[ACIBFDInterfacePolicyType] = strawberry_django.field()
+
+    aci_bfd_interface_attachment: ACIBFDInterfaceAttachmentType | None = strawberry_django.field()
+    aci_bfd_interface_attachment_list: list[ACIBFDInterfaceAttachmentType] = (
         strawberry_django.field()
     )
 

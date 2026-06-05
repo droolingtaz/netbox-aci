@@ -122,3 +122,34 @@ class ACIExternalEPGSubnet(ACIBaseModel):
 
         if self.scope_controls and not isinstance(self.scope_controls, list):
             raise ValidationError({"scope_controls": _("Must be a JSON list of strings.")})
+
+        if self.aci_external_epg_id and self.prefix:
+            # Enforce strict prefix uniqueness within a VRF across all L3Outs.
+            # APIC technically allows duplicate prefixes across L3Outs when
+            # scope flags differ, but the plugin enforces strict uniqueness as a
+            # safer default — much easier to explain and harder to misconfigure.
+            parent_vrf_id = self.aci_external_epg.aci_l3out.aci_vrf_id
+            if parent_vrf_id:
+                from netbox_cisco_aci.models.l3out.external_epg import (
+                    ACIExternalEPGSubnet,
+                )
+
+                clash = (
+                    ACIExternalEPGSubnet.objects.filter(
+                        prefix=self.prefix,
+                        aci_external_epg__aci_l3out__aci_vrf_id=parent_vrf_id,
+                    )
+                    .exclude(pk=self.pk)
+                    .first()
+                )
+                if clash:
+                    raise ValidationError(
+                        {
+                            "prefix": _(
+                                "Prefix %(prefix)s already exists on External EPG "
+                                "%(other)s in this VRF. Each prefix must appear at "
+                                "most once across L3Outs sharing the same VRF."
+                            )
+                            % {"prefix": self.prefix, "other": clash.aci_external_epg}
+                        }
+                    )

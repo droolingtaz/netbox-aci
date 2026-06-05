@@ -3,6 +3,8 @@
 from netbox.api.viewsets import NetBoxModelViewSet
 
 from ...filtersets.l3out import (
+    ACIBFDInterfaceAttachmentFilterSet,
+    ACIBFDInterfacePolicyFilterSet,
     ACIBGPPeerFilterSet,
     ACIEIGRPInterfacePolicyFilterSet,
     ACIExternalEPGFilterSet,
@@ -18,6 +20,8 @@ from ...filtersets.l3out import (
     ACIOSPFInterfacePolicyFilterSet,
 )
 from ...models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -33,6 +37,8 @@ from ...models.l3out import (
     ACIOSPFInterfacePolicy,
 )
 from ..serializers.l3out import (
+    ACIBFDInterfaceAttachmentSerializer,
+    ACIBFDInterfacePolicySerializer,
     ACIBGPPeerSerializer,
     ACIEIGRPInterfacePolicySerializer,
     ACIExternalEPGSerializer,
@@ -153,3 +159,18 @@ class ACIL3OutStaticRouteNextHopViewSet(NetBoxModelViewSet):
     )
     serializer_class = ACIL3OutStaticRouteNextHopSerializer
     filterset_class = ACIL3OutStaticRouteNextHopFilterSet
+
+
+class ACIBFDInterfacePolicyViewSet(NetBoxModelViewSet):
+    queryset = ACIBFDInterfacePolicy.objects.select_related("aci_tenant")
+    serializer_class = ACIBFDInterfacePolicySerializer
+    filterset_class = ACIBFDInterfacePolicyFilterSet
+
+
+class ACIBFDInterfaceAttachmentViewSet(NetBoxModelViewSet):
+    queryset = ACIBFDInterfaceAttachment.objects.select_related(
+        "aci_logical_interface_profile",
+        "aci_bfd_interface_policy",
+    )
+    serializer_class = ACIBFDInterfaceAttachmentSerializer
+    filterset_class = ACIBFDInterfaceAttachmentFilterSet

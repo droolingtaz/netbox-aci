@@ -22,6 +22,16 @@
     {% include 'inc/panels/custom_fields.html' %}
   </div>
   <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Subnets" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciexternalepgsubnet_add' %}?aci_external_epg={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for sub in object.subnets.all %}
+          <tr><td><a href="{{ sub.get_absolute_url }}">{{ sub.prefix }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No subnets defined." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
     {% include 'inc/panels/comments.html' %}
   </div>
 </div>

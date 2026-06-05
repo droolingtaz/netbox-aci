@@ -43,6 +43,8 @@ from .fabric import (  # noqa: F401
     ACIPodSerializer,
 )
 from .l3out import (  # noqa: F401
+    ACIBFDInterfaceAttachmentSerializer,
+    ACIBFDInterfacePolicySerializer,
     ACIBGPPeerSerializer,
     ACIEIGRPInterfacePolicySerializer,
     ACIExternalEPGSerializer,

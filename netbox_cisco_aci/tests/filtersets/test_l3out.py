@@ -472,3 +472,66 @@ class ACIL3OutFilterSetSearchTests(TestCase):
     def test_search_matches_name_alias_description(self):
         qs = ACIL3OutFilterSet({"q": "psi"}, ACIL3Out.objects.filter(aci_tenant=self.tenant)).qs
         self.assertEqual(qs.count(), 3)
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfacePolicy + ACIBFDInterfaceAttachment — filterset tests
+# ---------------------------------------------------------------------------
+
+
+class BFDFilterSetTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from netbox_cisco_aci.filtersets.l3out import (
+            ACIBFDInterfaceAttachmentFilterSet,
+            ACIBFDInterfacePolicyFilterSet,
+        )
+        from netbox_cisco_aci.models.l3out import (
+            ACIBFDInterfaceAttachment,
+            ACIBFDInterfacePolicy,
+        )
+
+        cls.ACIBFDInterfacePolicyFilterSet = ACIBFDInterfacePolicyFilterSet
+        cls.ACIBFDInterfaceAttachmentFilterSet = ACIBFDInterfaceAttachmentFilterSet
+        cls.ACIBFDInterfacePolicy = ACIBFDInterfacePolicy
+        cls.ACIBFDInterfaceAttachment = ACIBFDInterfaceAttachment
+
+        cls.fab = ACIFabric.objects.create(name="DC-BFD-FS")
+        cls.tenant = ACITenant.objects.create(aci_fabric=cls.fab, name="t-bfd-fs")
+        cls.vrf = ACIVRF.objects.create(aci_tenant=cls.tenant, name="vrf-bfd-fs")
+        cls.l3out = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant, aci_vrf=cls.vrf, name="l3out-bfd-fs"
+        )
+        cls.lnp = ACILogicalNodeProfile.objects.create(aci_l3out=cls.l3out, name="lnp-bfd-fs")
+        cls.lip1 = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=cls.lnp, name="lip-bfd-fs-1"
+        )
+        cls.lip2 = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=cls.lnp, name="lip-bfd-fs-2"
+        )
+        cls.pol1 = ACIBFDInterfacePolicy.objects.create(aci_tenant=cls.tenant, name="bfd-pol-alpha")
+        cls.pol2 = ACIBFDInterfacePolicy.objects.create(aci_tenant=cls.tenant, name="bfd-pol-beta")
+        cls.att1 = ACIBFDInterfaceAttachment.objects.create(
+            aci_logical_interface_profile=cls.lip1,
+            aci_bfd_interface_policy=cls.pol1,
+            name="bfd-att-1",
+        )
+        cls.att2 = ACIBFDInterfaceAttachment.objects.create(
+            aci_logical_interface_profile=cls.lip2,
+            aci_bfd_interface_policy=cls.pol2,
+            name="bfd-att-2",
+        )
+
+    def test_bfd_policy_filter_by_name(self):
+        qs = self.ACIBFDInterfacePolicyFilterSet(
+            {"name": ["bfd-pol-alpha"]},
+            self.ACIBFDInterfacePolicy.objects.filter(aci_tenant=self.tenant),
+        ).qs
+        self.assertEqual(list(qs), [self.pol1])
+
+    def test_bfd_attachment_filter_by_policy(self):
+        qs = self.ACIBFDInterfaceAttachmentFilterSet(
+            {"aci_bfd_interface_policy_id": [self.pol1.pk]},
+            self.ACIBFDInterfaceAttachment.objects.all(),
+        ).qs
+        self.assertEqual(list(qs), [self.att1])

@@ -20,7 +20,7 @@
   </div>
   <div class="col col-md-6">
     <div class="card">
-      <h2 class="card-header">{% trans "Entries" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Entries" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acifilterentry_add' %}?aci_filter={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         <thead><tr><th>Name</th><th>EtherType</th><th>IP proto</th></tr></thead>
         {% for e in object.entries.all %}

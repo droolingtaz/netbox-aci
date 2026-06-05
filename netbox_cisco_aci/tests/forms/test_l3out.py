@@ -410,3 +410,124 @@ class StaticRouteFormTests(TestCase):
         )
         self.assertFalse(form.is_valid())
         self.assertIn("aci_static_route", form.errors)
+
+
+# ---------------------------------------------------------------------------
+# ACIL3Out — protocol defaults via PLUGINS_CONFIG
+# ---------------------------------------------------------------------------
+
+
+class L3OutFormProtocolDefaultsTests(TestCase):
+    """Test that PLUGINS_CONFIG l3out_default_protocols seeds new-object forms."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.fab = ACIFabric.objects.create(name="DC-Proto-Defaults")
+        cls.tenant = ACITenant.objects.create(aci_fabric=cls.fab, name="t-pd")
+        cls.vrf = ACIVRF.objects.create(aci_tenant=cls.tenant, name="vrf-pd")
+        cls.l3out = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant,
+            aci_vrf=cls.vrf,
+            name="l3out-pd",
+            protocol_bgp=False,
+            protocol_static=False,
+        )
+
+    def test_defaults_applied_on_new_object_form(self):
+        """When PLUGINS_CONFIG sets bgp=True, a new-object form should show bgp=True."""
+        from unittest.mock import patch
+
+        with patch(
+            "netbox.plugins.utils.get_plugin_config",
+            return_value={"bgp": True, "ospf": False, "eigrp": False, "static": False},
+        ):
+            form = ACIL3OutForm()
+        self.assertTrue(form.fields["protocol_bgp"].initial)
+        self.assertFalse(form.fields["protocol_ospf"].initial)
+
+    def test_defaults_not_applied_on_edit(self):
+        """Editing an existing object must not overwrite stored values with defaults."""
+        from unittest.mock import patch
+
+        with patch(
+            "netbox.plugins.utils.get_plugin_config",
+            return_value={"bgp": True, "ospf": True, "eigrp": True, "static": True},
+        ):
+            form = ACIL3OutForm(instance=self.l3out)
+        # When editing, __init__ skips the defaults block, so initial stays at the
+        # field's own default (False for BooleanField), not the plugin config value.
+        self.assertNotEqual(form.fields["protocol_bgp"].initial, True)
+
+    def test_missing_default_keys_do_not_raise(self):
+        """If only some keys are in PLUGINS_CONFIG, the form must not raise KeyError."""
+        from unittest.mock import patch
+
+        with patch(
+            "netbox.plugins.utils.get_plugin_config",
+            return_value={"bgp": True},
+        ):
+            try:
+                form = ACIL3OutForm()
+            except KeyError as exc:
+                self.fail(f"KeyError raised for missing protocol keys: {exc}")
+        self.assertTrue(form.fields["protocol_bgp"].initial)
+        # Protocols not in the config should remain at the field's own default.
+        self.assertNotEqual(form.fields["protocol_ospf"].initial, True)
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfacePolicy + ACIBFDInterfaceAttachment — form tests
+# ---------------------------------------------------------------------------
+
+
+class BFDFormTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from netbox_cisco_aci.forms.l3out import (
+            ACIBFDInterfaceAttachmentForm,
+            ACIBFDInterfacePolicyForm,
+        )
+        from netbox_cisco_aci.models.l3out import ACIBFDInterfacePolicy
+
+        cls.ACIBFDInterfacePolicyForm = ACIBFDInterfacePolicyForm
+        cls.ACIBFDInterfaceAttachmentForm = ACIBFDInterfaceAttachmentForm
+        cls.fab = ACIFabric.objects.create(name="DC-BFD-Form")
+        cls.tenant = ACITenant.objects.create(aci_fabric=cls.fab, name="t-bfd-form")
+        cls.vrf = ACIVRF.objects.create(aci_tenant=cls.tenant, name="vrf-bfd-form")
+        cls.l3out = ACIL3Out.objects.create(
+            aci_tenant=cls.tenant, aci_vrf=cls.vrf, name="l3out-bfd-form"
+        )
+        cls.lnp = ACILogicalNodeProfile.objects.create(aci_l3out=cls.l3out, name="lnp-bfd-form")
+        cls.lip = ACILogicalInterfaceProfile.objects.create(
+            aci_logical_node_profile=cls.lnp, name="lip-bfd-form"
+        )
+        cls.policy = ACIBFDInterfacePolicy.objects.create(
+            aci_tenant=cls.tenant, name="bfd-pol-form"
+        )
+
+    def test_bfd_policy_form_valid(self):
+        form = self.ACIBFDInterfacePolicyForm(
+            data={
+                "name": "bfd-policy-x",
+                "aci_tenant": self.tenant.pk,
+                "admin_state": "enabled",
+                "detection_multiplier": 3,
+                "min_rx_interval_ms": 50,
+                "min_tx_interval_ms": 50,
+                "echo_admin_state": "enabled",
+                "echo_rx_interval_ms": 50,
+                "slow_timer_ms": 2000,
+                "controls": [],
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_bfd_attachment_form_valid(self):
+        form = self.ACIBFDInterfaceAttachmentForm(
+            data={
+                "name": "bfd-att-test",
+                "aci_logical_interface_profile": self.lip.pk,
+                "aci_bfd_interface_policy": self.policy.pk,
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)

@@ -1,6 +1,8 @@
 """UI views for Phase 7 L3Out models."""
 
 from ..filtersets.l3out import (
+    ACIBFDInterfaceAttachmentFilterSet,
+    ACIBFDInterfacePolicyFilterSet,
     ACIBGPPeerFilterSet,
     ACIEIGRPInterfacePolicyFilterSet,
     ACIExternalEPGFilterSet,
@@ -16,6 +18,14 @@ from ..filtersets.l3out import (
     ACIOSPFInterfacePolicyFilterSet,
 )
 from ..forms.l3out import (
+    ACIBFDInterfaceAttachmentBulkEditForm,
+    ACIBFDInterfaceAttachmentFilterForm,
+    ACIBFDInterfaceAttachmentForm,
+    ACIBFDInterfaceAttachmentImportForm,
+    ACIBFDInterfacePolicyBulkEditForm,
+    ACIBFDInterfacePolicyFilterForm,
+    ACIBFDInterfacePolicyForm,
+    ACIBFDInterfacePolicyImportForm,
     ACIBGPPeerBulkEditForm,
     ACIBGPPeerFilterForm,
     ACIBGPPeerForm,
@@ -70,6 +80,8 @@ from ..forms.l3out import (
     ACIOSPFInterfacePolicyImportForm,
 )
 from ..models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -85,6 +97,8 @@ from ..models.l3out import (
     ACIOSPFInterfacePolicy,
 )
 from ..tables.l3out import (
+    ACIBFDInterfaceAttachmentTable,
+    ACIBFDInterfacePolicyTable,
     ACIBGPPeerTable,
     ACIEIGRPInterfacePolicyTable,
     ACIExternalEPGSubnetTable,
@@ -304,6 +318,37 @@ _bind(
         select=(
             "aci_static_route",
             "aci_static_route__aci_logical_node",
+        ),
+    ),
+)
+
+_bind(
+    "ACIBFDInterfacePolicy",
+    _five_views(
+        ACIBFDInterfacePolicy,
+        ACIBFDInterfacePolicyTable,
+        ACIBFDInterfacePolicyFilterSet,
+        ACIBFDInterfacePolicyFilterForm,
+        ACIBFDInterfacePolicyForm,
+        ACIBFDInterfacePolicyImportForm,
+        ACIBFDInterfacePolicyBulkEditForm,
+        select=("aci_tenant",),
+    ),
+)
+
+_bind(
+    "ACIBFDInterfaceAttachment",
+    _five_views(
+        ACIBFDInterfaceAttachment,
+        ACIBFDInterfaceAttachmentTable,
+        ACIBFDInterfaceAttachmentFilterSet,
+        ACIBFDInterfaceAttachmentFilterForm,
+        ACIBFDInterfaceAttachmentForm,
+        ACIBFDInterfaceAttachmentImportForm,
+        ACIBFDInterfaceAttachmentBulkEditForm,
+        select=(
+            "aci_logical_interface_profile",
+            "aci_bfd_interface_policy",
         ),
     ),
 )

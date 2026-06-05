@@ -8,9 +8,7 @@ from .version import __version__
 class NetBoxACIConfig(PluginConfig):
     """PluginConfig for netbox-cisco-aci.
 
-    A single release supports both NetBox 4.5.x and 4.6.x. Bumping the
-    upper bound is reserved for explicit compatibility-bump releases —
-    feature PRs must not touch ``min_version`` or ``max_version``.
+    Requires NetBox 4.6.x. NetBox 4.5 support was dropped in v0.2.0.
     """
 
     name = "netbox_cisco_aci"
@@ -29,7 +27,7 @@ class NetBoxACIConfig(PluginConfig):
     author_email = "blake.parker@e280.com"
     base_url = "cisco-aci"
 
-    min_version = "4.5.0"
+    min_version = "4.6.0"
     max_version = "4.6.99"
 
     required_settings: list[str] = []
@@ -39,6 +37,12 @@ class NetBoxACIConfig(PluginConfig):
         "interface_panel_max_rows": 25,
         "device_panel_max_rows": 100,
         "enable_template_extensions": True,
+        "l3out_default_protocols": {
+            "bgp": False,
+            "ospf": False,
+            "eigrp": False,
+            "static": True,
+        },
     }
 
 

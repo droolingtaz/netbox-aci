@@ -13,3 +13,33 @@ under `PLUGINS_CONFIG['netbox_cisco_aci']` in `configuration.py`:
 
 All settings are optional. Unset values fall back to the defaults
 above.
+
+## `l3out_default_protocols`
+
+Sets default protocol selections when creating a new L3Out via the UI. Accepts a dict with
+boolean values for any of: `bgp`, `ospf`, `eigrp`, `static`.
+
+Example:
+
+```python
+PLUGINS_CONFIG = {
+    "netbox_cisco_aci": {
+        "l3out_default_protocols": {
+            "bgp": False,
+            "ospf": False,
+            "eigrp": False,
+            "static": True,
+        },
+    },
+}
+```
+
+Only applies when **creating** a new L3Out object (i.e. not when editing an existing one).
+Keys absent from the dict leave the corresponding field at its model-level default.
+
+| Key      | Default | Purpose |
+|----------|---------|---------|
+| `bgp`    | `False` | Pre-check the "BGP" protocol checkbox |
+| `ospf`   | `False` | Pre-check the "OSPF" protocol checkbox |
+| `eigrp`  | `False` | Pre-check the "EIGRP" protocol checkbox |
+| `static` | `True`  | Pre-check the "Static" protocol checkbox |

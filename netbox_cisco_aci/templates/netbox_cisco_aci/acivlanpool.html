@@ -21,7 +21,7 @@
   </div>
   <div class="col col-md-6">
     <div class="card">
-      <h2 class="card-header">{% trans "VLAN Blocks" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "VLAN Blocks" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acivlanpoolblock_add' %}?aci_vlan_pool={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover attr-table">
         {% for b in object.blocks.all %}
           <tr>

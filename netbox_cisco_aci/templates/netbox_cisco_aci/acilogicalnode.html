@@ -27,9 +27,8 @@
     {% include 'inc/panels/comments.html' %}
 
     {% with static_routes=object.static_routes.all|slice:":25" %}
-    {% if static_routes %}
     <div class="card">
-      <h2 class="card-header">{% trans "Static Routes" %}</h2>
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "Static Routes" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acil3outstaticroute_add' %}?aci_logical_node={{ object.pk }}">{% trans "Add" %}</a></h2>
       <table class="table table-hover">
         <thead>
           <tr>
@@ -49,7 +48,6 @@
         </tbody>
       </table>
     </div>
-    {% endif %}
     {% endwith %}
   </div>
 </div>

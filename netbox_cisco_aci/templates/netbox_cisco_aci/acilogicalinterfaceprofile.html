@@ -22,6 +22,36 @@
     {% include 'inc/panels/custom_fields.html' %}
   </div>
   <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "L3Out Interfaces" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acil3outinterface_add' %}?aci_logical_interface_profile={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for iface in object.l3out_interfaces.all %}
+          <tr><td><a href="{{ iface.get_absolute_url }}">{{ iface.name }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No L3Out interfaces." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "BGP Peers" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:acibgppeer_add' %}?aci_logical_interface_profile={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% for peer in object.bgp_peers.all %}
+          <tr><td><a href="{{ peer.get_absolute_url }}">{{ peer.name }}</a></td></tr>
+        {% empty %}
+          <tr><td class="text-muted">{% trans "No BGP peers." %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header d-flex justify-content-between align-items-center">{% trans "OSPF Attachments" %}<a class="btn btn-sm btn-primary" href="{% url 'plugins:netbox_cisco_aci:aciospfinterfaceattachment_add' %}?aci_logical_interface_profile={{ object.pk }}">{% trans "Add" %}</a></h2>
+      <table class="table table-hover attr-table">
+        {% if object.ospf_attachment %}
+          <tr><td><a href="{{ object.ospf_attachment.get_absolute_url }}">{{ object.ospf_attachment }}</a></td></tr>
+        {% else %}
+          <tr><td class="text-muted">{% trans "No OSPF attachment." %}</td></tr>
+        {% endif %}
+      </table>
+    </div>
     {% include 'inc/panels/comments.html' %}
   </div>
 </div>

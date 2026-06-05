@@ -12,6 +12,7 @@ from netbox.forms import (
 from utilities.forms.fields import DynamicModelChoiceField, DynamicModelMultipleChoiceField
 
 from ..choices import (
+    EnabledDisabledChoices,
     L3OutInterfaceTypeChoices,
     OSPFAreaTypeChoices,
     OSPFNetworkTypeChoices,
@@ -20,6 +21,8 @@ from ..choices import (
 )
 from ..models.fabric import ACINode
 from ..models.l3out import (
+    ACIBFDInterfaceAttachment,
+    ACIBFDInterfacePolicy,
     ACIBGPPeer,
     ACIEIGRPInterfacePolicy,
     ACIExternalEPG,
@@ -47,6 +50,23 @@ _TOKEN_LIST_HELP = _("JSON list of string tokens.")
 class ACIL3OutForm(NetBoxModelForm):
     aci_tenant = DynamicModelChoiceField(queryset=ACITenant.objects.all(), label=_("Tenant"))
     aci_vrf = DynamicModelChoiceField(queryset=ACIVRF.objects.all(), label=_("VRF"))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            try:
+                from netbox.plugins.utils import get_plugin_config
+
+                cfg = get_plugin_config("netbox_cisco_aci", "l3out_default_protocols", {}) or {}
+            except (ImportError, Exception):
+                from django.conf import settings
+
+                cfg = settings.PLUGINS_CONFIG.get("netbox_cisco_aci", {}).get(
+                    "l3out_default_protocols", {}
+                )
+            for proto in ("bgp", "ospf", "eigrp", "static"):
+                if proto in cfg:
+                    self.fields[f"protocol_{proto}"].initial = bool(cfg[proto])
 
     class Meta:
         model = ACIL3Out
@@ -842,6 +862,134 @@ class ACIL3OutStaticRouteNextHopImportForm(NetBoxModelImportForm):
             "nexthop_address",
             "nexthop_type",
             "preference",
+            "description",
+            "tags",
+        )
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfacePolicy
+# ---------------------------------------------------------------------------
+
+
+class ACIBFDInterfacePolicyForm(NetBoxModelForm):
+    aci_tenant = DynamicModelChoiceField(queryset=ACITenant.objects.all(), label=_("Tenant"))
+    controls = forms.JSONField(required=False, initial=list, help_text=_TOKEN_LIST_HELP)
+
+    class Meta:
+        model = ACIBFDInterfacePolicy
+        fields = (
+            "name",
+            "name_alias",
+            "aci_tenant",
+            "admin_state",
+            "detection_multiplier",
+            "min_rx_interval_ms",
+            "min_tx_interval_ms",
+            "echo_admin_state",
+            "echo_rx_interval_ms",
+            "slow_timer_ms",
+            "controls",
+            "description",
+            "tags",
+        )
+
+
+class ACIBFDInterfacePolicyBulkEditForm(NetBoxModelBulkEditForm):
+    model = ACIBFDInterfacePolicy
+    admin_state = forms.ChoiceField(choices=EnabledDisabledChoices, required=False)
+    echo_admin_state = forms.ChoiceField(choices=EnabledDisabledChoices, required=False)
+    description = forms.CharField(max_length=128, required=False)
+    nullable_fields = ("description", "name_alias")
+
+
+class ACIBFDInterfacePolicyFilterForm(NetBoxModelFilterSetForm):
+    model = ACIBFDInterfacePolicy
+    aci_tenant_id = DynamicModelMultipleChoiceField(
+        queryset=ACITenant.objects.all(), required=False, label=_("Tenant")
+    )
+    admin_state = forms.MultipleChoiceField(choices=EnabledDisabledChoices, required=False)
+
+
+class ACIBFDInterfacePolicyImportForm(NetBoxModelImportForm):
+    aci_tenant = forms.ModelChoiceField(queryset=ACITenant.objects.all(), to_field_name="name")
+    admin_state = forms.ChoiceField(choices=EnabledDisabledChoices, required=False)
+    echo_admin_state = forms.ChoiceField(choices=EnabledDisabledChoices, required=False)
+
+    class Meta:
+        model = ACIBFDInterfacePolicy
+        fields = (
+            "name",
+            "name_alias",
+            "aci_tenant",
+            "admin_state",
+            "detection_multiplier",
+            "min_rx_interval_ms",
+            "min_tx_interval_ms",
+            "echo_admin_state",
+            "echo_rx_interval_ms",
+            "slow_timer_ms",
+            "description",
+            "tags",
+        )
+
+
+# ---------------------------------------------------------------------------
+# ACIBFDInterfaceAttachment
+# ---------------------------------------------------------------------------
+
+
+class ACIBFDInterfaceAttachmentForm(NetBoxModelForm):
+    aci_logical_interface_profile = DynamicModelChoiceField(
+        queryset=ACILogicalInterfaceProfile.objects.all(), label=_("LIP")
+    )
+    aci_bfd_interface_policy = DynamicModelChoiceField(
+        queryset=ACIBFDInterfacePolicy.objects.all(), label=_("BFD Policy")
+    )
+
+    class Meta:
+        model = ACIBFDInterfaceAttachment
+        fields = (
+            "name",
+            "name_alias",
+            "aci_logical_interface_profile",
+            "aci_bfd_interface_policy",
+            "description",
+            "tags",
+        )
+
+
+class ACIBFDInterfaceAttachmentBulkEditForm(NetBoxModelBulkEditForm):
+    model = ACIBFDInterfaceAttachment
+    description = forms.CharField(max_length=128, required=False)
+    nullable_fields = ("description", "name_alias")
+
+
+class ACIBFDInterfaceAttachmentFilterForm(NetBoxModelFilterSetForm):
+    model = ACIBFDInterfaceAttachment
+    aci_logical_interface_profile_id = DynamicModelMultipleChoiceField(
+        queryset=ACILogicalInterfaceProfile.objects.all(), required=False, label=_("LIP")
+    )
+    aci_bfd_interface_policy_id = DynamicModelMultipleChoiceField(
+        queryset=ACIBFDInterfacePolicy.objects.all(), required=False, label=_("BFD Policy")
+    )
+
+
+class ACIBFDInterfaceAttachmentImportForm(NetBoxModelImportForm):
+    aci_logical_interface_profile = forms.ModelChoiceField(
+        queryset=ACILogicalInterfaceProfile.objects.all(), to_field_name="name"
+    )
+    aci_bfd_interface_policy = forms.ModelChoiceField(
+        queryset=ACIBFDInterfacePolicy.objects.all(), to_field_name="name"
+    )
+
+    class Meta:
+        model = ACIBFDInterfaceAttachment
+        fields = (
+            "name",
+            "name_alias",
+            "aci_logical_interface_profile",
+            "aci_bfd_interface_policy",
             "description",
             "tags",
         )

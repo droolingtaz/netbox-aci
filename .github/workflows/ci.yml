@@ -40,10 +40,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # NetBox 4.5+ requires Python 3.12 — earlier Python versions
+        # NetBox 4.6+ requires Python 3.12 — earlier Python versions
         # cannot even import the NetBox app, so they are excluded.
         python-version: ["3.12"]
-        netbox-version: ["v4.5.0", "v4.6.0"]
+        netbox-version: ["v4.6.0"]
     services:
       postgres:
         image: postgres:16
