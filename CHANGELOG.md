@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/).
 
 ---
 
+## [0.4.0] — 2026-06-06
+
+Fills out the fabric-overlay control-plane policies that APIC's
+pod-policy-group actually contains, and adds the **Pod Profile / Pod
+Selector** binding layer that applies a pod-policy-group to a pod.
+
+> **Compatibility:** NetBox v4.6 only · Python 3.12.
+
+### Added
+
+- **Pod Profile family** (PR #28). New `ACIPodProfile` (`fabricPodP`)
+  + `ACIPodSelector` (`fabricPodS`). A selector is range/ALL and
+  points at exactly one `ACIPodPolicyGroup`; `clean()` enforces the
+  range/ALL invariants and `pod_block_from <= pod_block_to`.
+- **BGP Route Reflector policy** — `ACIBGPRouteReflectorPolicy`
+  (`bgpRRP`) holds the overlay ASN; child `ACIBGPRouteReflectorNode`
+  (`bgpRRNodePEp`) pins which spine node IDs act as route reflectors.
+- **COOP Group policy** — `ACICOOPGroupPolicy` (`coopPol`) exposes
+  the strict/compatible MD5 authentication knob between spines.
+- **IS-IS Domain policy** — `ACIISISDomainPolicy` (`isisDomPol`) covers
+  metric style + LSP timers + fast-flood for the underlay.
+- **Four new optional FK slots on `ACIPodPolicyGroup`**, all `SET_NULL`:
+  - `bgp_rr_policy` → `ACIBGPRouteReflectorPolicy`
+  - `coop_policy` → `ACICOOPGroupPolicy`
+  - `isis_policy` → `ACIISISDomainPolicy`
+  - `datetime_policy` → `ACINTPPolicy` (APIC's `datetimePol` MO is
+    structurally the same object as an NTP policy, so we reuse rather
+    than create a duplicate `ACIDateTimePolicy` model).
+- **Choices**: `COOPAuthenticationTypeChoices`, `ISISMetricStyleChoices`.
+- **API**: 7 new endpoints — `bgp-rr-policies`, `bgp-rr-nodes`,
+  `coop-policies`, `isis-policies`, `pod-profiles`, `pod-selectors`,
+  plus the existing `pod-policy-groups` endpoint serializing the 4
+  new slots.
+- **Migration `0013_pod_profile_and_bindings`** adds 7 new tables,
+  4 new FK columns on `acipodpolicygroup`, and 12 partial unique
+  constraints.
+
+### Changed
+
+- **Navigation: "Pod Policies" group grows from 5 to 9 items**
+  (added Pod Profiles, BGP RR Policies, COOP Group Policies, IS-IS
+  Domain Policies). Total menu now **28 items / 7 groups**.
+- `ACIPodPolicyGroupForm` / table / filterset / detail template all
+  gain surfaces for the four new FK slots.
+
+### Notes
+
+- The user asked us to audit whether `snmp_trap_policy` was visible
+  on the pod-policy-group UI. Confirmed it was already wired through
+  the form, table, and detail template since v0.3.0 — no fix needed.
+- Spine node IDs on `ACIBGPRouteReflectorNode` are stored as plain
+  integers rather than FKs to `ACINode`, so APIC's accept-then-create
+  flow continues to work even if the matching `ACINode` row hasn't
+  been imported yet.
+
+---
+
 ## [0.3.0] — 2026-06-06
 
 This release adds the operational pod-policy family the plugin was
