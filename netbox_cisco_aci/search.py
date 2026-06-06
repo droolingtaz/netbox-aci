@@ -511,3 +511,53 @@ class ACISNMPTrapDestIndex(SearchIndex):
 class ACIPodPolicyGroupIndex(SearchIndex):
     model = ACIPodPolicyGroup
     fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — Pod Profile + extended fabric-overlay bindings
+# ---------------------------------------------------------------------------
+
+from .models.pod_policies import (  # noqa: E402
+    ACIBGPRouteReflectorNode,
+    ACIBGPRouteReflectorPolicy,
+    ACICOOPGroupPolicy,
+    ACIISISDomainPolicy,
+    ACIPodProfile,
+    ACIPodSelector,
+)
+
+
+@register_search
+class ACIBGPRouteReflectorPolicyIndex(SearchIndex):
+    model = ACIBGPRouteReflectorPolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACIBGPRouteReflectorNodeIndex(SearchIndex):
+    model = ACIBGPRouteReflectorNode
+    fields = (("name", 100), ("description", 500))
+
+
+@register_search
+class ACICOOPGroupPolicyIndex(SearchIndex):
+    model = ACICOOPGroupPolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACIISISDomainPolicyIndex(SearchIndex):
+    model = ACIISISDomainPolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACIPodProfileIndex(SearchIndex):
+    model = ACIPodProfile
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACIPodSelectorIndex(SearchIndex):
+    model = ACIPodSelector
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))

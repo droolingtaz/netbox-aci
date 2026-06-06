@@ -45,9 +45,15 @@ from .l3out import (  # noqa: F401
     ACIOSPFInterfacePolicy,
 )
 from .pod_policies import (  # noqa: F401
+    ACIBGPRouteReflectorNode,
+    ACIBGPRouteReflectorPolicy,
+    ACICOOPGroupPolicy,
+    ACIISISDomainPolicy,
     ACINTPPolicy,
     ACINTPProvider,
     ACIPodPolicyGroup,
+    ACIPodProfile,
+    ACIPodSelector,
     ACISNMPClient,
     ACISNMPClientGroup,
     ACISNMPCommunity,

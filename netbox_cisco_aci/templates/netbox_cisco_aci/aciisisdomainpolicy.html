@@ -1,0 +1,31 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "IS-IS Domain Policy" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "Name" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "Alias" %}</th><td>{{ object.name_alias|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Fabric" %}</th>
+          <td><a href="{{ object.aci_fabric.get_absolute_url }}">{{ object.aci_fabric }}</a></td></tr>
+        <tr><th scope="row">{% trans "Tenant" %}</th>
+          <td>{% if object.aci_tenant %}<a href="{{ object.aci_tenant.get_absolute_url }}">{{ object.aci_tenant }}</a>{% else %}<span class="text-muted">{% trans "fabric-wide" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "Admin state" %}</th><td>{{ object.get_admin_state_display }}</td></tr>
+        <tr><th scope="row">{% trans "Metric style" %}</th><td>{{ object.get_metric_style_display }}</td></tr>
+        <tr><th scope="row">{% trans "LSP fast flood" %}</th><td>{{ object.lsp_fast_flood_enabled|yesno }}</td></tr>
+        <tr><th scope="row">{% trans "LSP gen init (ms)" %}</th><td>{{ object.lsp_gen_init_intvl_ms }}</td></tr>
+        <tr><th scope="row">{% trans "LSP gen max (ms)" %}</th><td>{{ object.lsp_gen_max_intvl_ms }}</td></tr>
+        <tr><th scope="row">{% trans "LSP gen secondary (ms)" %}</th><td>{{ object.lsp_gen_sec_intvl_ms }}</td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">{% include 'inc/panels/comments.html' %}</div>
+</div>
+{% endblock %}

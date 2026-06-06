@@ -55,6 +55,49 @@ class ACIPodPolicyGroup(ACIFabricBaseModel):
         null=True,
         blank=True,
     )
+    # v0.4.0 — fabric-overlay control-plane bindings
+    bgp_rr_policy = models.ForeignKey(
+        to="netbox_cisco_aci.ACIBGPRouteReflectorPolicy",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("BGP Route Reflector Policy"),
+        null=True,
+        blank=True,
+    )
+    coop_policy = models.ForeignKey(
+        to="netbox_cisco_aci.ACICOOPGroupPolicy",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("COOP Group Policy"),
+        null=True,
+        blank=True,
+    )
+    isis_policy = models.ForeignKey(
+        to="netbox_cisco_aci.ACIISISDomainPolicy",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("IS-IS Domain Policy"),
+        null=True,
+        blank=True,
+    )
+    # APIC's ``datetimePol`` MO is the same object as the NTP policy —
+    # the pod-policy-group exposes one slot for clock + NTP. We point
+    # this FK at the existing ACINTPPolicy rather than creating a
+    # duplicate ACIDateTimePolicy model. Operators who want to keep
+    # NTP and date/time conceptually separate can model two NTP
+    # policies and bind each here.
+    datetime_policy = models.ForeignKey(
+        to="netbox_cisco_aci.ACINTPPolicy",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("Date/Time Policy"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "APIC's date/time policy MO (datetimePol) is structurally the "
+            "same as an NTP policy, so this slot points at an ACINTPPolicy."
+        ),
+    )
 
     clone_fields = (
         "aci_fabric",
@@ -62,6 +105,10 @@ class ACIPodPolicyGroup(ACIFabricBaseModel):
         "syslog_policy",
         "snmp_policy",
         "snmp_trap_policy",
+        "bgp_rr_policy",
+        "coop_policy",
+        "isis_policy",
+        "datetime_policy",
         "description",
     )
 

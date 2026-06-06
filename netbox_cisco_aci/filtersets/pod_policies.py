@@ -5,8 +5,11 @@ from django.db.models import Q
 from netbox.filtersets import NetBoxModelFilterSet
 
 from ..choices import (
+    COOPAuthenticationTypeChoices,
     EnabledDisabledChoices,
+    ISISMetricStyleChoices,
     NTPProviderStateChoices,
+    RangeAllChoices,
     SNMPAuthProtocolChoices,
     SNMPPrivProtocolChoices,
     SNMPVersionChoices,
@@ -15,9 +18,15 @@ from ..choices import (
 )
 from ..models.fabric import ACIFabric
 from ..models.pod_policies import (
+    ACIBGPRouteReflectorNode,
+    ACIBGPRouteReflectorPolicy,
+    ACICOOPGroupPolicy,
+    ACIISISDomainPolicy,
     ACINTPPolicy,
     ACINTPProvider,
     ACIPodPolicyGroup,
+    ACIPodProfile,
+    ACIPodSelector,
     ACISNMPClient,
     ACISNMPClientGroup,
     ACISNMPCommunity,
@@ -291,10 +300,162 @@ class ACIPodPolicyGroupFilterSet(NetBoxModelFilterSet):
         field_name="snmp_trap_policy",
         label="SNMP Trap Policy (ID)",
     )
+    bgp_rr_policy_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIBGPRouteReflectorPolicy.objects.all(),
+        field_name="bgp_rr_policy",
+        label="BGP RR Policy (ID)",
+    )
+    coop_policy_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACICOOPGroupPolicy.objects.all(),
+        field_name="coop_policy",
+        label="COOP Policy (ID)",
+    )
+    isis_policy_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIISISDomainPolicy.objects.all(),
+        field_name="isis_policy",
+        label="IS-IS Policy (ID)",
+    )
+    datetime_policy_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACINTPPolicy.objects.all(),
+        field_name="datetime_policy",
+        label="Date/Time Policy (ID)",
+    )
 
     class Meta:
         model = ACIPodPolicyGroup
         fields = ("id", "name", "name_alias", "description")
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(_q_name(value))
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — BGP Route Reflector
+# ---------------------------------------------------------------------------
+
+
+class ACIBGPRouteReflectorPolicyFilterSet(NetBoxModelFilterSet):
+    aci_fabric_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIFabric.objects.all(), field_name="aci_fabric", label="Fabric (ID)"
+    )
+    aci_tenant_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACITenant.objects.all(), field_name="aci_tenant", label="Tenant (ID)"
+    )
+    admin_state = django_filters.MultipleChoiceFilter(choices=EnabledDisabledChoices)
+
+    class Meta:
+        model = ACIBGPRouteReflectorPolicy
+        fields = ("id", "name", "name_alias", "description", "autonomous_system_number")
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(_q_name(value))
+
+
+class ACIBGPRouteReflectorNodeFilterSet(NetBoxModelFilterSet):
+    bgp_rr_policy_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIBGPRouteReflectorPolicy.objects.all(),
+        field_name="bgp_rr_policy",
+        label="BGP RR Policy (ID)",
+    )
+
+    class Meta:
+        model = ACIBGPRouteReflectorNode
+        fields = ("id", "name", "node_id", "description")
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(_q_name(value))
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — COOP
+# ---------------------------------------------------------------------------
+
+
+class ACICOOPGroupPolicyFilterSet(NetBoxModelFilterSet):
+    aci_fabric_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIFabric.objects.all(), field_name="aci_fabric", label="Fabric (ID)"
+    )
+    aci_tenant_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACITenant.objects.all(), field_name="aci_tenant", label="Tenant (ID)"
+    )
+    admin_state = django_filters.MultipleChoiceFilter(choices=EnabledDisabledChoices)
+    authentication_type = django_filters.MultipleChoiceFilter(choices=COOPAuthenticationTypeChoices)
+
+    class Meta:
+        model = ACICOOPGroupPolicy
+        fields = ("id", "name", "name_alias", "description")
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(_q_name(value))
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — IS-IS
+# ---------------------------------------------------------------------------
+
+
+class ACIISISDomainPolicyFilterSet(NetBoxModelFilterSet):
+    aci_fabric_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIFabric.objects.all(), field_name="aci_fabric", label="Fabric (ID)"
+    )
+    aci_tenant_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACITenant.objects.all(), field_name="aci_tenant", label="Tenant (ID)"
+    )
+    admin_state = django_filters.MultipleChoiceFilter(choices=EnabledDisabledChoices)
+    metric_style = django_filters.MultipleChoiceFilter(choices=ISISMetricStyleChoices)
+
+    class Meta:
+        model = ACIISISDomainPolicy
+        fields = ("id", "name", "name_alias", "description", "lsp_fast_flood_enabled")
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(_q_name(value))
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — Pod Profile + Pod Selector
+# ---------------------------------------------------------------------------
+
+
+class ACIPodProfileFilterSet(NetBoxModelFilterSet):
+    aci_fabric_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIFabric.objects.all(), field_name="aci_fabric", label="Fabric (ID)"
+    )
+
+    class Meta:
+        model = ACIPodProfile
+        fields = ("id", "name", "name_alias", "description")
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(_q_name(value))
+
+
+class ACIPodSelectorFilterSet(NetBoxModelFilterSet):
+    pod_profile_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIPodProfile.objects.all(), field_name="pod_profile", label="Pod Profile (ID)"
+    )
+    pod_policy_group_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=ACIPodPolicyGroup.objects.all(),
+        field_name="pod_policy_group",
+        label="Pod Policy Group (ID)",
+    )
+    selector_type = django_filters.MultipleChoiceFilter(choices=RangeAllChoices)
+
+    class Meta:
+        model = ACIPodSelector
+        fields = ("id", "name", "name_alias", "description", "pod_block_from", "pod_block_to")
 
     def search(self, queryset, name, value):
         if not value.strip():

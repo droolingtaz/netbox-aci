@@ -60,9 +60,15 @@ from .l3out import (  # noqa: F401
     ACIOSPFInterfacePolicySerializer,
 )
 from .pod_policies import (  # noqa: F401
+    ACIBGPRouteReflectorNodeSerializer,
+    ACIBGPRouteReflectorPolicySerializer,
+    ACICOOPGroupPolicySerializer,
+    ACIISISDomainPolicySerializer,
     ACINTPPolicySerializer,
     ACINTPProviderSerializer,
     ACIPodPolicyGroupSerializer,
+    ACIPodProfileSerializer,
+    ACIPodSelectorSerializer,
     ACISNMPClientGroupSerializer,
     ACISNMPClientSerializer,
     ACISNMPCommunitySerializer,

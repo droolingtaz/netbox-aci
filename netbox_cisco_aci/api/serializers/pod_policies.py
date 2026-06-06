@@ -4,9 +4,15 @@ from netbox.api.serializers import NetBoxModelSerializer
 from rest_framework import serializers
 
 from ...models.pod_policies import (
+    ACIBGPRouteReflectorNode,
+    ACIBGPRouteReflectorPolicy,
+    ACICOOPGroupPolicy,
+    ACIISISDomainPolicy,
     ACINTPPolicy,
     ACINTPProvider,
     ACIPodPolicyGroup,
+    ACIPodProfile,
+    ACIPodSelector,
     ACISNMPClient,
     ACISNMPClientGroup,
     ACISNMPCommunity,
@@ -401,6 +407,174 @@ class ACISNMPTrapDestSerializer(NetBoxModelSerializer):
 # ---------------------------------------------------------------------------
 
 
+class ACIBGPRouteReflectorPolicySerializer(NetBoxModelSerializer):
+    url = _url("acibgproutereflectorpolicy")
+    aci_fabric = ACIFabricSerializer(nested=True)
+    aci_tenant = ACITenantSerializer(nested=True, required=False, allow_null=True)
+
+    class Meta:
+        model = ACIBGPRouteReflectorPolicy
+        fields = (
+            "id",
+            "url",
+            "display",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "autonomous_system_number",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "aci_fabric",
+            "aci_tenant",
+            "autonomous_system_number",
+            "description",
+            "display",
+            "id",
+            "name",
+            "url",
+        )
+
+
+class ACIBGPRouteReflectorNodeSerializer(NetBoxModelSerializer):
+    url = _url("acibgproutereflectornode")
+    bgp_rr_policy = ACIBGPRouteReflectorPolicySerializer(nested=True)
+
+    class Meta:
+        model = ACIBGPRouteReflectorNode
+        fields = (
+            "id",
+            "url",
+            "display",
+            "bgp_rr_policy",
+            "node_id",
+            "name",
+            "name_alias",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "bgp_rr_policy",
+            "display",
+            "id",
+            "name",
+            "node_id",
+            "url",
+        )
+
+
+class ACICOOPGroupPolicySerializer(NetBoxModelSerializer):
+    url = _url("acicoopgrouppolicy")
+    aci_fabric = ACIFabricSerializer(nested=True)
+    aci_tenant = ACITenantSerializer(nested=True, required=False, allow_null=True)
+
+    class Meta:
+        model = ACICOOPGroupPolicy
+        fields = (
+            "id",
+            "url",
+            "display",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "authentication_type",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "aci_fabric",
+            "aci_tenant",
+            "authentication_type",
+            "description",
+            "display",
+            "id",
+            "name",
+            "url",
+        )
+
+
+class ACIISISDomainPolicySerializer(NetBoxModelSerializer):
+    url = _url("aciisisdomainpolicy")
+    aci_fabric = ACIFabricSerializer(nested=True)
+    aci_tenant = ACITenantSerializer(nested=True, required=False, allow_null=True)
+
+    class Meta:
+        model = ACIISISDomainPolicy
+        fields = (
+            "id",
+            "url",
+            "display",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "metric_style",
+            "lsp_fast_flood_enabled",
+            "lsp_gen_init_intvl_ms",
+            "lsp_gen_max_intvl_ms",
+            "lsp_gen_sec_intvl_ms",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "aci_fabric",
+            "aci_tenant",
+            "description",
+            "display",
+            "id",
+            "metric_style",
+            "name",
+            "url",
+        )
+
+
+class ACIPodProfileSerializer(NetBoxModelSerializer):
+    url = _url("acipodprofile")
+    aci_fabric = ACIFabricSerializer(nested=True)
+
+    class Meta:
+        model = ACIPodProfile
+        fields = (
+            "id",
+            "url",
+            "display",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "aci_fabric",
+            "description",
+            "display",
+            "id",
+            "name",
+            "url",
+        )
+
+
 class ACIPodPolicyGroupSerializer(NetBoxModelSerializer):
     url = _url("acipodpolicygroup")
     aci_fabric = ACIFabricSerializer(nested=True)
@@ -408,6 +582,12 @@ class ACIPodPolicyGroupSerializer(NetBoxModelSerializer):
     syslog_policy = ACISyslogPolicySerializer(nested=True, required=False, allow_null=True)
     snmp_policy = ACISNMPPolicySerializer(nested=True, required=False, allow_null=True)
     snmp_trap_policy = ACISNMPTrapPolicySerializer(nested=True, required=False, allow_null=True)
+    bgp_rr_policy = ACIBGPRouteReflectorPolicySerializer(
+        nested=True, required=False, allow_null=True
+    )
+    coop_policy = ACICOOPGroupPolicySerializer(nested=True, required=False, allow_null=True)
+    isis_policy = ACIISISDomainPolicySerializer(nested=True, required=False, allow_null=True)
+    datetime_policy = ACINTPPolicySerializer(nested=True, required=False, allow_null=True)
 
     class Meta:
         model = ACIPodPolicyGroup
@@ -422,6 +602,10 @@ class ACIPodPolicyGroupSerializer(NetBoxModelSerializer):
             "syslog_policy",
             "snmp_policy",
             "snmp_trap_policy",
+            "bgp_rr_policy",
+            "coop_policy",
+            "isis_policy",
+            "datetime_policy",
             "description",
             "tags",
             "custom_fields",
@@ -434,5 +618,40 @@ class ACIPodPolicyGroupSerializer(NetBoxModelSerializer):
             "display",
             "id",
             "name",
+            "url",
+        )
+
+
+class ACIPodSelectorSerializer(NetBoxModelSerializer):
+    url = _url("acipodselector")
+    pod_profile = ACIPodProfileSerializer(nested=True)
+    pod_policy_group = ACIPodPolicyGroupSerializer(nested=True)
+
+    class Meta:
+        model = ACIPodSelector
+        fields = (
+            "id",
+            "url",
+            "display",
+            "pod_profile",
+            "name",
+            "name_alias",
+            "selector_type",
+            "pod_block_from",
+            "pod_block_to",
+            "pod_policy_group",
+            "description",
+            "tags",
+            "custom_fields",
+            "created",
+            "last_updated",
+        )
+        brief_fields = (
+            "display",
+            "id",
+            "name",
+            "pod_policy_group",
+            "pod_profile",
+            "selector_type",
             "url",
         )

@@ -30,6 +30,14 @@
           <td>{% if object.snmp_policy %}<a href="{{ object.snmp_policy.get_absolute_url }}">{{ object.snmp_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
         <tr><th scope="row">{% trans "SNMP Trap" %}</th>
           <td>{% if object.snmp_trap_policy %}<a href="{{ object.snmp_trap_policy.get_absolute_url }}">{{ object.snmp_trap_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "BGP Route Reflector" %}</th>
+          <td>{% if object.bgp_rr_policy %}<a href="{{ object.bgp_rr_policy.get_absolute_url }}">{{ object.bgp_rr_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "COOP" %}</th>
+          <td>{% if object.coop_policy %}<a href="{{ object.coop_policy.get_absolute_url }}">{{ object.coop_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "IS-IS" %}</th>
+          <td>{% if object.isis_policy %}<a href="{{ object.isis_policy.get_absolute_url }}">{{ object.isis_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "Date/Time" %}</th>
+          <td>{% if object.datetime_policy %}<a href="{{ object.datetime_policy.get_absolute_url }}">{{ object.datetime_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
       </table>
     </div>
     {% include 'inc/panels/comments.html' %}

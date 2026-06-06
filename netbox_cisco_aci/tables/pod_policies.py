@@ -4,9 +4,15 @@ import django_tables2 as tables
 from netbox.tables import ChoiceFieldColumn, NetBoxTable, columns
 
 from ..models.pod_policies import (
+    ACIBGPRouteReflectorNode,
+    ACIBGPRouteReflectorPolicy,
+    ACICOOPGroupPolicy,
+    ACIISISDomainPolicy,
     ACINTPPolicy,
     ACINTPProvider,
     ACIPodPolicyGroup,
+    ACIPodProfile,
+    ACIPodSelector,
     ACISNMPClient,
     ACISNMPClientGroup,
     ACISNMPCommunity,
@@ -317,6 +323,10 @@ class ACIPodPolicyGroupTable(NetBoxTable):
     syslog_policy = tables.Column(linkify=True, verbose_name="Syslog")
     snmp_policy = tables.Column(linkify=True, verbose_name="SNMP")
     snmp_trap_policy = tables.Column(linkify=True, verbose_name="SNMP Trap")
+    bgp_rr_policy = tables.Column(linkify=True, verbose_name="BGP RR")
+    coop_policy = tables.Column(linkify=True, verbose_name="COOP")
+    isis_policy = tables.Column(linkify=True, verbose_name="IS-IS")
+    datetime_policy = tables.Column(linkify=True, verbose_name="Date/Time")
     tags = _tag_col("acipodpolicygroup")
 
     class Meta(NetBoxTable.Meta):
@@ -331,6 +341,10 @@ class ACIPodPolicyGroupTable(NetBoxTable):
             "syslog_policy",
             "snmp_policy",
             "snmp_trap_policy",
+            "bgp_rr_policy",
+            "coop_policy",
+            "isis_policy",
+            "datetime_policy",
             "description",
             "tags",
         )
@@ -341,4 +355,165 @@ class ACIPodPolicyGroupTable(NetBoxTable):
             "syslog_policy",
             "snmp_policy",
             "snmp_trap_policy",
+            "bgp_rr_policy",
+        )
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — BGP Route Reflector
+# ---------------------------------------------------------------------------
+
+
+class ACIBGPRouteReflectorPolicyTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    aci_fabric = tables.Column(linkify=True, verbose_name="Fabric")
+    aci_tenant = tables.Column(linkify=True, verbose_name="Tenant")
+    admin_state = ChoiceFieldColumn()
+    tags = _tag_col("acibgproutereflectorpolicy")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIBGPRouteReflectorPolicy
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "autonomous_system_number",
+            "description",
+            "tags",
+        )
+        default_columns = (
+            "name",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "autonomous_system_number",
+        )
+
+
+class ACIBGPRouteReflectorNodeTable(NetBoxTable):
+    node_id = tables.Column(linkify=True, verbose_name="Node ID")
+    bgp_rr_policy = tables.Column(linkify=True, verbose_name="BGP RR Policy")
+    tags = _tag_col("acibgproutereflectornode")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIBGPRouteReflectorNode
+        fields = ("pk", "id", "node_id", "bgp_rr_policy", "name", "description", "tags")
+        default_columns = ("node_id", "bgp_rr_policy", "name")
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — COOP
+# ---------------------------------------------------------------------------
+
+
+class ACICOOPGroupPolicyTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    aci_fabric = tables.Column(linkify=True, verbose_name="Fabric")
+    aci_tenant = tables.Column(linkify=True, verbose_name="Tenant")
+    admin_state = ChoiceFieldColumn()
+    authentication_type = ChoiceFieldColumn(verbose_name="Auth")
+    tags = _tag_col("acicoopgrouppolicy")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACICOOPGroupPolicy
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "authentication_type",
+            "description",
+            "tags",
+        )
+        default_columns = (
+            "name",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "authentication_type",
+        )
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — IS-IS
+# ---------------------------------------------------------------------------
+
+
+class ACIISISDomainPolicyTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    aci_fabric = tables.Column(linkify=True, verbose_name="Fabric")
+    aci_tenant = tables.Column(linkify=True, verbose_name="Tenant")
+    admin_state = ChoiceFieldColumn()
+    metric_style = ChoiceFieldColumn(verbose_name="Metric")
+    tags = _tag_col("aciisisdomainpolicy")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIISISDomainPolicy
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "name_alias",
+            "aci_fabric",
+            "aci_tenant",
+            "admin_state",
+            "metric_style",
+            "lsp_fast_flood_enabled",
+            "description",
+            "tags",
+        )
+        default_columns = ("name", "aci_fabric", "aci_tenant", "admin_state", "metric_style")
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 — Pod Profile + Pod Selector
+# ---------------------------------------------------------------------------
+
+
+class ACIPodProfileTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    aci_fabric = tables.Column(linkify=True, verbose_name="Fabric")
+    tags = _tag_col("acipodprofile")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIPodProfile
+        fields = ("pk", "id", "name", "name_alias", "aci_fabric", "description", "tags")
+        default_columns = ("name", "aci_fabric", "description")
+
+
+class ACIPodSelectorTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    pod_profile = tables.Column(linkify=True, verbose_name="Pod Profile")
+    selector_type = ChoiceFieldColumn(verbose_name="Type")
+    pod_policy_group = tables.Column(linkify=True, verbose_name="Pod Policy Group")
+    tags = _tag_col("acipodselector")
+
+    class Meta(NetBoxTable.Meta):
+        model = ACIPodSelector
+        fields = (
+            "pk",
+            "id",
+            "name",
+            "pod_profile",
+            "selector_type",
+            "pod_block_from",
+            "pod_block_to",
+            "pod_policy_group",
+            "description",
+            "tags",
+        )
+        default_columns = (
+            "name",
+            "pod_profile",
+            "selector_type",
+            "pod_block_from",
+            "pod_block_to",
+            "pod_policy_group",
         )

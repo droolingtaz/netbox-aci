@@ -856,3 +856,47 @@ class SNMPVersionChoices(ChoiceSet):
         (V2C, _("v2c")),
         (V3, _("v3")),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Pod policies — fabric-overlay control-plane (v0.4.0)
+# ---------------------------------------------------------------------------
+
+
+class COOPAuthenticationTypeChoices(ChoiceSet):
+    """COOP authentication mode between spines (``coopPol.type``).
+
+    APIC's ``coopPol`` exposes two modes: ``compatible`` (legacy, no MD5
+    auth required) and ``strict`` (MD5 authentication mandatory). Strict
+    is the modern recommendation and is the only safe choice on fabrics
+    that span management VRFs.
+    """
+
+    key = "ACICOOPGroupPolicy.authentication_type"
+
+    COMPATIBLE = "compatible"
+    STRICT = "strict"
+
+    CHOICES = [
+        (COMPATIBLE, _("Compatible")),
+        (STRICT, _("Strict")),
+    ]
+
+
+class ISISMetricStyleChoices(ChoiceSet):
+    """IS-IS metric style (``isisDomPol.mtuMode`` adjacent).
+
+    ACI underlay only really supports wide metrics; ``narrow`` is kept
+    as a value for parity with the APIC enum but should not be used on
+    a healthy fabric.
+    """
+
+    key = "ACIISISDomainPolicy.metric_style"
+
+    NARROW = "narrow"
+    WIDE = "wide"
+
+    CHOICES = [
+        (NARROW, _("Narrow")),
+        (WIDE, _("Wide")),
+    ]

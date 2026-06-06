@@ -1,0 +1,50 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "Pod Profile" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "Name" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "Alias" %}</th><td>{{ object.name_alias|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Fabric" %}</th>
+          <td><a href="{{ object.aci_fabric.get_absolute_url }}">{{ object.aci_fabric }}</a></td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">
+        {% trans "Selectors" %}
+        <div class="card-actions">
+          <a href="{% url 'plugins:netbox_cisco_aci:acipodselector_add' %}?pod_profile={{ object.pk }}" class="btn btn-ghost-primary btn-sm">
+            <i class="mdi mdi-plus-thick"></i> {% trans "Add selector" %}
+          </a>
+        </div>
+      </h2>
+      <table class="table table-hover">
+        <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Type" %}</th><th>{% trans "Range" %}</th><th>{% trans "Pod Policy Group" %}</th></tr></thead>
+        <tbody>
+          {% for s in object.selectors.all %}
+          <tr>
+            <td><a href="{{ s.get_absolute_url }}">{{ s.name }}</a></td>
+            <td>{{ s.get_selector_type_display }}</td>
+            <td>{% if s.selector_type == "all" %}<span class="text-muted">ALL</span>{% else %}{{ s.pod_block_from }}&ndash;{{ s.pod_block_to }}{% endif %}</td>
+            <td><a href="{{ s.pod_policy_group.get_absolute_url }}">{{ s.pod_policy_group }}</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-muted">{% trans "No selectors configured." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'inc/panels/comments.html' %}
+  </div>
+</div>
+{% endblock %}
