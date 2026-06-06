@@ -7,24 +7,77 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.2.0] — 2026-06-05
 
-> **Compatibility:** NetBox v4.6 only (4.5 support dropped)
+First minor release on the NetBox 4.6 line. Two themes: tighten the
+UX and validation guarantees on top of NetBox 4.6, and start treating
+the ACI BD gateway as a first-class NetBox IPAM citizen.
+
+> **Compatibility:** NetBox v4.6 only (4.5 support dropped) · Python 3.12.
 
 ### Added
 
-- `ACIBFDInterfacePolicy` + `ACIBFDInterfaceAttachment` models for BFD on L3Out logical interfaces (migration `0010_bfd`).
-- `PLUGINS_CONFIG['netbox_cisco_aci']['l3out_default_protocols']` to seed L3Out protocol checkboxes on the create form at site level.
-- New validations:
-  - **EPG static port binding**: `encap_vlan` must fall within a VLAN pool block reachable through the EPG's domain bindings.
-  - **External EPG subnet**: prefix must be unique across all L3Outs sharing the same VRF.
-  - **AAEP domain association**: cannot attach two domains whose VLAN pool blocks overlap.
-- "Add" buttons on parent detail-page panels for all child models removed from the sidebar.
+- **BFD policy + attachment models.** `ACIBFDInterfacePolicy` and
+  `ACIBFDInterfaceAttachment` cover BFD on L3Out logical interfaces
+  (migration `0010_bfd`), with the same model/form/serializer/table/
+  filterset shape as the rest of the L3Out hierarchy.
+- **BD Subnet IPAM linkage** (PR #24). New
+  `ACIBridgeDomainSubnet.gateway_ipam_ip_address` ForeignKey →
+  `ipam.IPAddress` (nullable, `SET_NULL`). The new field is the
+  preferred representation; it participates in NetBox search, IPAM
+  utilisation, and audit reporting. Both representations stay visible
+  during the deprecation window, and a new `display_gateway` property
+  picks IPAM over the legacy string for `__str__`, templates, and the
+  filterset `q` search. Per-BD uniqueness is preserved on each
+  representation via two partial `UniqueConstraint`s
+  (`netbox_cisco_aci_acibdsubnet_bd_gw_unique`,
+  `netbox_cisco_aci_acibdsubnet_bd_ipam_unique`). `clean()` requires
+  at least one of the two representations to be set. Migration
+  `0011_bridgedomainsubnet_ipam_ip_address` adds the field, drops the
+  pre-existing non-partial unique, and installs the two partial
+  uniques.
+- **`PLUGINS_CONFIG['netbox_cisco_aci']['l3out_default_protocols']`**
+  to seed L3Out protocol checkboxes on the create form at site level.
+- **New validations.**
+  - **EPG static port binding**: `encap_vlan` must fall within a VLAN
+    pool block reachable through the EPG's domain bindings.
+  - **External EPG subnet**: prefix must be unique across all L3Outs
+    sharing the same VRF.
+  - **AAEP domain association**: cannot attach two domains whose VLAN
+    pool blocks overlap.
+- **"Add" buttons** on parent detail-page panels for every child model
+  removed from the sidebar.
 
 ### Changed
 
-- **BREAKING**: NetBox 4.6 only. NetBox 4.5 support is dropped. `min_version = max_version = "4.6.x"`. CI matrix narrowed to a single `v4.6.0` entry.
-- **BREAKING (UI)**: Navigation cleaned up from 52 menu items to 19 across 6 groups. Child models (selectors, attachments, sub-entries, per-port policies, all L3Out children) removed from the sidebar; reach them via Add buttons on parent detail pages. URLs and detail pages all preserved.
+- **BREAKING**: NetBox 4.6 only. NetBox 4.5 support is dropped.
+  `min_version = max_version = "4.6.x"`. CI matrix narrowed to a
+  single `v4.6.0` entry.
+- **BREAKING (UI)**: Navigation cleaned up from 52 menu items to 19
+  across 6 groups (Fabric, Tenancy, Connectivity, Contracts, L3Outs,
+  Policies). Child models (selectors, attachments, sub-entries,
+  per-port policies, every L3Out child) are removed from the sidebar;
+  reach them via Add buttons on parent detail pages. URLs and detail
+  pages preserved.
+- **BD subnet table** gains a linkified `Gateway (IPAM)` column; the
+  legacy column is now labelled `Gateway (legacy)`. Both are in
+  `default_columns` with IPAM first.
+
+### Deprecated
+
+- `ACIBridgeDomainSubnet.gateway_ip` (free-form `CharField`). Existing
+  rows continue to round-trip and the field stays visible in forms,
+  tables, and the API throughout the 0.2.x line. A future major
+  release will remove it; new subnets should use
+  `gateway_ipam_ip_address` instead.
+
+### Internal
+
+- **CI test scanner hardening.** The `test_form_dropdown_filters`
+  regex used a nested-paren alternation that backtracked
+  exponentially on a `DynamicModelChoiceField` whose body contained
+  a nested `_("...")` call. Replaced with a paren-counting walker;
+  the same forms now scan in milliseconds.
 
 ---
 
