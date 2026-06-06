@@ -99,6 +99,13 @@ PLUGIN_MODELS = [
     "acisnmpv3user",
     "acisnmptrappolicy",
     "acisnmptrapdest",
+    # v0.4.0 — Pod Profile + extended fabric-overlay bindings
+    "acibgproutereflectorpolicy",
+    "acibgproutereflectornode",
+    "acicoopgrouppolicy",
+    "aciisisdomainpolicy",
+    "acipodprofile",
+    "acipodselector",
 ]
 
 
@@ -149,10 +156,12 @@ class PluginURLPatternsTests(TestCase):
 
 
 class NavigationStructureTests(TestCase):
-    """Verify the 24-item, 7-group navigation shape is intact.
+    """Verify the 28-item, 7-group navigation shape is intact.
 
     v0.2.0 reduced the menu from 52 items to 19 across 6 groups.
     v0.3.0 added a 7th group ("Pod Policies") with 5 items — total 24.
+    v0.4.0 grew "Pod Policies" to 9 items (added Pod Profile, BGP RR,
+    COOP, IS-IS) — total now 28 / 7 groups.
     """
 
     def test_menu_has_seven_groups(self):
@@ -164,7 +173,7 @@ class NavigationStructureTests(TestCase):
         from netbox_cisco_aci.navigation import menu
 
         total = sum(len(g.items) for g in menu.groups)
-        self.assertEqual(total, 24)  # 3+6+4+2+1+3+5
+        self.assertEqual(total, 28)  # 3+6+4+2+1+3+9
 
     def test_group_item_counts(self):
         from netbox_cisco_aci.navigation import menu
@@ -176,7 +185,7 @@ class NavigationStructureTests(TestCase):
         self.assertEqual(len(groups["Contracts"]), 2)
         self.assertEqual(len(groups["L3Outs"]), 1)
         self.assertEqual(len(groups["Policies"]), 3)
-        self.assertEqual(len(groups["Pod Policies"]), 5)
+        self.assertEqual(len(groups["Pod Policies"]), 9)
 
     def test_all_menu_urls_resolve(self):
         from netbox_cisco_aci.navigation import menu

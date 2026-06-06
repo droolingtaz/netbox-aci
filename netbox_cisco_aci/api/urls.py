@@ -64,9 +64,15 @@ from .views.l3out import (
     ACIOSPFInterfacePolicyViewSet,
 )
 from .views.pod_policies import (
+    ACIBGPRouteReflectorNodeViewSet,
+    ACIBGPRouteReflectorPolicyViewSet,
+    ACICOOPGroupPolicyViewSet,
+    ACIISISDomainPolicyViewSet,
     ACINTPPolicyViewSet,
     ACINTPProviderViewSet,
     ACIPodPolicyGroupViewSet,
+    ACIPodProfileViewSet,
+    ACIPodSelectorViewSet,
     ACISNMPClientGroupViewSet,
     ACISNMPClientViewSet,
     ACISNMPCommunityViewSet,
@@ -179,5 +185,13 @@ router.register("snmp-v3-users", ACISNMPv3UserViewSet)
 router.register("snmp-trap-policies", ACISNMPTrapPolicyViewSet)
 router.register("snmp-trap-destinations", ACISNMPTrapDestViewSet)
 router.register("pod-policy-groups", ACIPodPolicyGroupViewSet)
+
+# v0.4.0 — Pod Profile + Pod Selector + extended fabric-overlay bindings
+router.register("bgp-rr-policies", ACIBGPRouteReflectorPolicyViewSet)
+router.register("bgp-rr-nodes", ACIBGPRouteReflectorNodeViewSet)
+router.register("coop-policies", ACICOOPGroupPolicyViewSet)
+router.register("isis-policies", ACIISISDomainPolicyViewSet)
+router.register("pod-profiles", ACIPodProfileViewSet)
+router.register("pod-selectors", ACIPodSelectorViewSet)
 
 urlpatterns = router.urls

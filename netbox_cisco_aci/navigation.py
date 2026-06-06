@@ -1,7 +1,9 @@
 """Top-level NetBox navigation entries for the plugin.
 
 Navigation v0.2.0: reduced from 52 items to 19 across 6 groups.
-v0.3.0: added a 7th group ("Pod Policies") with 5 items — total now 24.
+v0.3.0: added a 7th group ("Pod Policies") with 5 items — total 24.
+v0.4.0: added Pod Profile + the 3 new fabric-overlay control-plane
+policies to the "Pod Policies" group — total now 28 items, 7 groups.
 
 Child models (selectors, attachments, sub-entries, per-port policies,
 all L3Out children, all pod-policy providers/destinations) are removed
@@ -66,11 +68,15 @@ policy_items = (
 # destinations) reach via "Add" buttons on the parent's detail page,
 # matching the convention established by Bundle A's nav cleanup.
 pod_policy_items = (
+    _item("acipodprofile", "Pod Profiles"),
     _item("acipodpolicygroup", "Pod Policy Groups"),
     _item("acintppolicy", "NTP Policies"),
     _item("acisyslogpolicy", "Syslog Policies"),
     _item("acisnmppolicy", "SNMP Policies"),
     _item("acisnmptrappolicy", "SNMP Trap Policies"),
+    _item("acibgproutereflectorpolicy", "BGP RR Policies"),
+    _item("acicoopgrouppolicy", "COOP Group Policies"),
+    _item("aciisisdomainpolicy", "IS-IS Domain Policies"),
 )
 
 menu = PluginMenu(

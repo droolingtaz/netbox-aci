@@ -335,3 +335,23 @@ urlpatterns += _crud(
     "snmp-trap-destinations", "snmp-trap-dst", pp, "ACISNMPTrapDest", "acisnmptrapdest"
 )
 urlpatterns += _crud("pod-policy-groups", "pod-pg", pp, "ACIPodPolicyGroup", "acipodpolicygroup")
+
+# v0.4.0 — Pod Profile + Pod Selector + extended fabric-overlay bindings
+urlpatterns += _crud(
+    "bgp-rr-policies",
+    "bgp-rr-pol",
+    pp,
+    "ACIBGPRouteReflectorPolicy",
+    "acibgproutereflectorpolicy",
+)
+urlpatterns += _crud(
+    "bgp-rr-nodes",
+    "bgp-rr-node",
+    pp,
+    "ACIBGPRouteReflectorNode",
+    "acibgproutereflectornode",
+)
+urlpatterns += _crud("coop-policies", "coop-pol", pp, "ACICOOPGroupPolicy", "acicoopgrouppolicy")
+urlpatterns += _crud("isis-policies", "isis-pol", pp, "ACIISISDomainPolicy", "aciisisdomainpolicy")
+urlpatterns += _crud("pod-profiles", "pod-profile", pp, "ACIPodProfile", "acipodprofile")
+urlpatterns += _crud("pod-selectors", "pod-selector", pp, "ACIPodSelector", "acipodselector")
