@@ -63,6 +63,20 @@ from .views.l3out import (
     ACIOSPFInterfaceAttachmentViewSet,
     ACIOSPFInterfacePolicyViewSet,
 )
+from .views.pod_policies import (
+    ACINTPPolicyViewSet,
+    ACINTPProviderViewSet,
+    ACIPodPolicyGroupViewSet,
+    ACISNMPClientGroupViewSet,
+    ACISNMPClientViewSet,
+    ACISNMPCommunityViewSet,
+    ACISNMPPolicyViewSet,
+    ACISNMPTrapDestViewSet,
+    ACISNMPTrapPolicyViewSet,
+    ACISNMPv3UserViewSet,
+    ACISyslogPolicyViewSet,
+    ACISyslogRemoteDestViewSet,
+)
 from .views.tenant import (
     ACIAppProfileViewSet,
     ACIBridgeDomainSubnetViewSet,
@@ -151,5 +165,19 @@ router.register("static-route-next-hops", ACIL3OutStaticRouteNextHopViewSet)
 # v0.2.0 — BFD
 router.register("bfd-interface-policies", ACIBFDInterfacePolicyViewSet)
 router.register("bfd-interface-attachments", ACIBFDInterfaceAttachmentViewSet)
+
+# v0.3.0 — Pod policies (NTP / Syslog / SNMP / SNMP Traps)
+router.register("ntp-policies", ACINTPPolicyViewSet)
+router.register("ntp-providers", ACINTPProviderViewSet)
+router.register("syslog-policies", ACISyslogPolicyViewSet)
+router.register("syslog-remote-destinations", ACISyslogRemoteDestViewSet)
+router.register("snmp-policies", ACISNMPPolicyViewSet)
+router.register("snmp-communities", ACISNMPCommunityViewSet)
+router.register("snmp-client-groups", ACISNMPClientGroupViewSet)
+router.register("snmp-clients", ACISNMPClientViewSet)
+router.register("snmp-v3-users", ACISNMPv3UserViewSet)
+router.register("snmp-trap-policies", ACISNMPTrapPolicyViewSet)
+router.register("snmp-trap-destinations", ACISNMPTrapDestViewSet)
+router.register("pod-policy-groups", ACIPodPolicyGroupViewSet)
 
 urlpatterns = router.urls

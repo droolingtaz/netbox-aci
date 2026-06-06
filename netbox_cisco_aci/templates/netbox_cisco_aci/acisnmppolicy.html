@@ -1,0 +1,92 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "SNMP Policy" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "Name" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "Alias" %}</th><td>{{ object.name_alias|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Fabric" %}</th>
+          <td><a href="{{ object.aci_fabric.get_absolute_url }}">{{ object.aci_fabric }}</a></td></tr>
+        <tr><th scope="row">{% trans "Tenant" %}</th>
+          <td>{% if object.aci_tenant %}<a href="{{ object.aci_tenant.get_absolute_url }}">{{ object.aci_tenant }}</a>{% else %}<span class="text-muted">{% trans "fabric-wide" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "Admin state" %}</th><td>{{ object.get_admin_state_display }}</td></tr>
+        <tr><th scope="row">{% trans "Contact" %}</th><td>{{ object.contact|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Location" %}</th><td>{{ object.location|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">
+        {% trans "Communities (v1/v2c)" %}
+        <div class="card-actions">
+          <a href="{% url 'plugins:netbox_cisco_aci:acisnmpcommunity_add' %}?snmp_policy={{ object.pk }}" class="btn btn-ghost-primary btn-sm">
+            <i class="mdi mdi-plus-thick"></i> {% trans "Add community" %}
+          </a>
+        </div>
+      </h2>
+      <table class="table table-hover">
+        <thead><tr><th>{% trans "Community" %}</th><th>{% trans "Description" %}</th></tr></thead>
+        <tbody>
+          {% for c in object.communities.all %}
+          <tr><td><a href="{{ c.get_absolute_url }}">{{ c.name }}</a></td><td>{{ c.description|placeholder }}</td></tr>
+          {% empty %}
+          <tr><td colspan="2" class="text-muted">{% trans "No communities configured." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">
+        {% trans "Client groups" %}
+        <div class="card-actions">
+          <a href="{% url 'plugins:netbox_cisco_aci:acisnmpclientgroup_add' %}?snmp_policy={{ object.pk }}" class="btn btn-ghost-primary btn-sm">
+            <i class="mdi mdi-plus-thick"></i> {% trans "Add group" %}
+          </a>
+        </div>
+      </h2>
+      <table class="table table-hover">
+        <thead><tr><th>{% trans "Group" %}</th><th>{% trans "Management EPG" %}</th></tr></thead>
+        <tbody>
+          {% for g in object.client_groups.all %}
+          <tr><td><a href="{{ g.get_absolute_url }}">{{ g.name }}</a></td><td>{{ g.mgmt_epg|placeholder }}</td></tr>
+          {% empty %}
+          <tr><td colspan="2" class="text-muted">{% trans "No client groups configured." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">
+        {% trans "SNMPv3 users" %}
+        <div class="card-actions">
+          <a href="{% url 'plugins:netbox_cisco_aci:acisnmpv3user_add' %}?snmp_policy={{ object.pk }}" class="btn btn-ghost-primary btn-sm">
+            <i class="mdi mdi-plus-thick"></i> {% trans "Add user" %}
+          </a>
+        </div>
+      </h2>
+      <table class="table table-hover">
+        <thead><tr><th>{% trans "User" %}</th><th>{% trans "Auth" %}</th><th>{% trans "Privacy" %}</th></tr></thead>
+        <tbody>
+          {% for u in object.v3_users.all %}
+          <tr><td><a href="{{ u.get_absolute_url }}">{{ u.name }}</a></td>
+              <td>{{ u.get_auth_protocol_display }}</td>
+              <td>{{ u.get_privacy_protocol_display }}</td></tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted">{% trans "No SNMPv3 users configured." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'inc/panels/comments.html' %}
+  </div>
+</div>
+{% endblock %}

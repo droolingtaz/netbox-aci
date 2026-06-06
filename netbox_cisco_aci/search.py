@@ -408,3 +408,106 @@ class ACIL3OutStaticRouteNextHopIndex(SearchIndex):
         ("nexthop_address", 100),
         ("description", 500),
     )
+
+
+# ---------------------------------------------------------------------------
+# v0.3.0 — Pod policies
+# ---------------------------------------------------------------------------
+
+from .models.pod_policies import (  # noqa: E402
+    ACINTPPolicy,
+    ACINTPProvider,
+    ACIPodPolicyGroup,
+    ACISNMPClient,
+    ACISNMPClientGroup,
+    ACISNMPCommunity,
+    ACISNMPPolicy,
+    ACISNMPTrapDest,
+    ACISNMPTrapPolicy,
+    ACISNMPv3User,
+    ACISyslogPolicy,
+    ACISyslogRemoteDest,
+)
+
+
+@register_search
+class ACINTPPolicyIndex(SearchIndex):
+    model = ACINTPPolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACINTPProviderIndex(SearchIndex):
+    model = ACINTPProvider
+    fields = (("host", 100), ("name", 200), ("description", 500))
+
+
+@register_search
+class ACISyslogPolicyIndex(SearchIndex):
+    model = ACISyslogPolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACISyslogRemoteDestIndex(SearchIndex):
+    model = ACISyslogRemoteDest
+    fields = (("host", 100), ("name", 200), ("description", 500))
+
+
+@register_search
+class ACISNMPPolicyIndex(SearchIndex):
+    model = ACISNMPPolicy
+    fields = (
+        ("name", 100),
+        ("name_alias", 200),
+        ("contact", 300),
+        ("location", 300),
+        ("description", 500),
+    )
+
+
+@register_search
+class ACISNMPCommunityIndex(SearchIndex):
+    model = ACISNMPCommunity
+    fields = (("name", 100), ("description", 500))
+
+
+@register_search
+class ACISNMPClientGroupIndex(SearchIndex):
+    model = ACISNMPClientGroup
+    fields = (("name", 100), ("mgmt_epg", 300), ("description", 500))
+
+
+@register_search
+class ACISNMPClientIndex(SearchIndex):
+    model = ACISNMPClient
+    fields = (("address", 100), ("name", 200), ("description", 500))
+
+
+@register_search
+class ACISNMPv3UserIndex(SearchIndex):
+    model = ACISNMPv3User
+    fields = (("name", 100), ("description", 500))
+
+
+@register_search
+class ACISNMPTrapPolicyIndex(SearchIndex):
+    model = ACISNMPTrapPolicy
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))
+
+
+@register_search
+class ACISNMPTrapDestIndex(SearchIndex):
+    model = ACISNMPTrapDest
+    fields = (
+        ("host", 100),
+        ("community_or_user", 200),
+        ("name", 300),
+        ("description", 500),
+    )
+
+
+@register_search
+class ACIPodPolicyGroupIndex(SearchIndex):
+    model = ACIPodPolicyGroup
+    fields = (("name", 100), ("name_alias", 200), ("description", 500))

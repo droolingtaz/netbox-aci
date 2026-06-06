@@ -1,0 +1,28 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "NTP Provider" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "Host" %}</th><td>{{ object.host }}</td></tr>
+        <tr><th scope="row">{% trans "Name" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "NTP Policy" %}</th>
+          <td><a href="{{ object.ntp_policy.get_absolute_url }}">{{ object.ntp_policy }}</a></td></tr>
+        <tr><th scope="row">{% trans "Role" %}</th><td>{{ object.get_role_display }}</td></tr>
+        <tr><th scope="row">{% trans "Min poll" %}</th><td>{{ object.min_poll }}</td></tr>
+        <tr><th scope="row">{% trans "Max poll" %}</th><td>{{ object.max_poll }}</td></tr>
+        <tr><th scope="row">{% trans "Key ID" %}</th><td>{{ object.key_id|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Management EPG" %}</th><td>{{ object.mgmt_epg|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">{% include 'inc/panels/comments.html' %}</div>
+</div>
+{% endblock %}

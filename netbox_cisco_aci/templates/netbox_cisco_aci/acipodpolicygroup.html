@@ -1,0 +1,38 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "Pod Policy Group" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "Name" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "Alias" %}</th><td>{{ object.name_alias|placeholder }}</td></tr>
+        <tr><th scope="row">{% trans "Fabric" %}</th>
+          <td><a href="{{ object.aci_fabric.get_absolute_url }}">{{ object.aci_fabric }}</a></td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "Bound policies" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "NTP" %}</th>
+          <td>{% if object.ntp_policy %}<a href="{{ object.ntp_policy.get_absolute_url }}">{{ object.ntp_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "Syslog" %}</th>
+          <td>{% if object.syslog_policy %}<a href="{{ object.syslog_policy.get_absolute_url }}">{{ object.syslog_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "SNMP" %}</th>
+          <td>{% if object.snmp_policy %}<a href="{{ object.snmp_policy.get_absolute_url }}">{{ object.snmp_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+        <tr><th scope="row">{% trans "SNMP Trap" %}</th>
+          <td>{% if object.snmp_trap_policy %}<a href="{{ object.snmp_trap_policy.get_absolute_url }}">{{ object.snmp_trap_policy }}</a>{% else %}<span class="text-muted">{% trans "not set" %}</span>{% endif %}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/comments.html' %}
+  </div>
+</div>
+{% endblock %}

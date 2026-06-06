@@ -1,9 +1,12 @@
 """Top-level NetBox navigation entries for the plugin.
 
-Navigation v0.2.0: reduced from 52 items to 17.
+Navigation v0.2.0: reduced from 52 items to 19 across 6 groups.
+v0.3.0: added a 7th group ("Pod Policies") with 5 items — total now 24.
+
 Child models (selectors, attachments, sub-entries, per-port policies,
-all L3Out children) are removed from the sidebar but remain fully
-reachable via URL routes and parent detail-page panels.
+all L3Out children, all pod-policy providers/destinations) are removed
+from the sidebar but remain fully reachable via URL routes and parent
+detail-page panels.
 """
 
 from netbox.plugins import PluginMenu, PluginMenuButton, PluginMenuItem
@@ -58,6 +61,18 @@ policy_items = (
     _item("aciinterfaceprofile", "Interface Profiles"),
 )
 
+# v0.3.0 — Pod policies. Parents only; child rows (providers,
+# destinations, communities, client groups, clients, v3 users, trap
+# destinations) reach via "Add" buttons on the parent's detail page,
+# matching the convention established by Bundle A's nav cleanup.
+pod_policy_items = (
+    _item("acipodpolicygroup", "Pod Policy Groups"),
+    _item("acintppolicy", "NTP Policies"),
+    _item("acisyslogpolicy", "Syslog Policies"),
+    _item("acisnmppolicy", "SNMP Policies"),
+    _item("acisnmptrappolicy", "SNMP Trap Policies"),
+)
+
 menu = PluginMenu(
     label="Cisco ACI",
     groups=(
@@ -67,6 +82,7 @@ menu = PluginMenu(
         ("Contracts", contract_items),
         ("L3Outs", l3out_items),
         ("Policies", policy_items),
+        ("Pod Policies", pod_policy_items),
     ),
     icon_class="mdi mdi-server-network",
 )
