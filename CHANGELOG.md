@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/).
 
 ---
 
+## [0.3.0] — 2026-06-06
+
+This release adds the operational pod-policy family the plugin was
+missing: NTP, Syslog, SNMP, and SNMP traps, plus the Pod Policy Group
+that actually binds them to a pod in APIC. Everything new lives under
+the new top-level "Pod Policies" menu group.
+
+> **Compatibility:** NetBox v4.6 only · Python 3.12.
+
+### Added
+
+- **Pod Policies family** (PR #26). Twelve new models grouped under a
+  new top-level menu "Pod Policies":
+  - `ACINTPPolicy` + `ACINTPProvider` (maps `datetimeNtpPol` /
+    `datetimeNtpProv`).
+  - `ACISyslogPolicy` + `ACISyslogRemoteDest` (maps `syslogGroup` /
+    `syslogRemoteDest`).
+  - `ACISNMPPolicy` + `ACISNMPCommunity`, `ACISNMPClientGroup` →
+    `ACISNMPClient`, `ACISNMPv3User` (maps `snmpPol` and its
+    children).
+  - `ACISNMPTrapPolicy` + `ACISNMPTrapDest` (maps `snmpTrapFwdServerP`
+    group).
+  - `ACIPodPolicyGroup` — binds NTP / Syslog / SNMP / SNMP-Trap
+    policies together (maps `fabricPodPGrp`).
+  - Migration `0012_pod_policies` adds all twelve tables plus 16
+    constraints (8 fabric/tenant partial uniques, 8 child uniques,
+    plus the partial unique enforcing "at most one preferred provider
+    per NTP policy").
+- **Fabric-scoped with optional tenant override.** Every policy parent
+  carries `aci_fabric` (mandatory) and `aci_tenant` (optional). Two
+  partial `UniqueConstraint`s per policy (one for `aci_tenant IS NULL`,
+  one for `aci_tenant IS NOT NULL`) enforce per-scope uniqueness without
+  tripping on PostgreSQL's NULL-distinct default.
+- **Validations.**
+  - `ACINTPProvider`: `min_poll <= max_poll`.
+  - `ACINTPProvider`: at most one row per policy with `role='preferred'`.
+  - `ACISNMPTrapDest`: `v3_security_level` only meaningful when
+    `version=v3`.
+- **API**: twelve new endpoints under `/api/plugins/aci/` —
+  `ntp-policies`, `ntp-providers`, `syslog-policies`,
+  `syslog-remote-destinations`, `snmp-policies`, `snmp-communities`,
+  `snmp-client-groups`, `snmp-clients`, `snmp-v3-users`,
+  `snmp-trap-policies`, `snmp-trap-destinations`, `pod-policy-groups`.
+- **Choices**: `NTPProviderStateChoices`, `SyslogSeverityChoices`,
+  `SyslogFacilityChoices`, `SNMPAuthProtocolChoices`,
+  `SNMPPrivProtocolChoices`, `SNMPSecurityLevelChoices`,
+  `SNMPVersionChoices`. The pre-existing `EnabledDisabledChoices`
+  is reused for every `admin_state` column.
+
+### Changed
+
+- **Navigation: 19 items / 6 groups → 24 items / 7 groups.** New
+  "Pod Policies" group exposes the five parents (Pod Policy Groups,
+  NTP Policies, Syslog Policies, SNMP Policies, SNMP Trap Policies).
+  Children reach via parent-detail "Add" buttons, same convention
+  established by Bundle A in v0.2.0.
+
+### Notes
+
+- Server host fields (`ACINTPProvider.host`,
+  `ACISyslogRemoteDest.host`, `ACISNMPTrapDest.host`, `ACISNMPClient.address`)
+  are free-form `CharField`s rather than IPAM-linked. NTP/syslog/SNMP
+  servers are routinely referenced by FQDN, and APIC accepts either,
+  so this mirrors APIC's free-form input. A future minor can layer on
+  Bundle B's deprecation-friendly IPAM linkage if any of these need to
+  participate in IPAM utilisation reporting.
+- SNMPv3 user records do not store auth/privacy secrets — secrets live
+  on APIC. The plugin tracks the user record for operational visibility
+  (which user belongs to which policy) and surfaces a note on the
+  detail page reminding operators to rotate secrets out-of-band.
+
+---
+
 ## [0.2.0] — 2026-06-05
 
 First minor release on the NetBox 4.6 line. Two themes: tighten the
