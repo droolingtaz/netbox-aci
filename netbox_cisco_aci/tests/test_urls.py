@@ -86,6 +86,19 @@ PLUGIN_MODELS = [
     # v0.2.0 — BFD
     "acibfdinterfacepolicy",
     "acibfdinterfaceattachment",
+    # v0.3.0 — Pod policies
+    "acipodpolicygroup",
+    "acintppolicy",
+    "acintpprovider",
+    "acisyslogpolicy",
+    "acisyslogremotedest",
+    "acisnmppolicy",
+    "acisnmpcommunity",
+    "acisnmpclientgroup",
+    "acisnmpclient",
+    "acisnmpv3user",
+    "acisnmptrappolicy",
+    "acisnmptrapdest",
 ]
 
 
@@ -136,18 +149,22 @@ class PluginURLPatternsTests(TestCase):
 
 
 class NavigationStructureTests(TestCase):
-    """Verify the 17-item, 6-group navigation shape is intact."""
+    """Verify the 24-item, 7-group navigation shape is intact.
 
-    def test_menu_has_six_groups(self):
+    v0.2.0 reduced the menu from 52 items to 19 across 6 groups.
+    v0.3.0 added a 7th group ("Pod Policies") with 5 items — total 24.
+    """
+
+    def test_menu_has_seven_groups(self):
         from netbox_cisco_aci.navigation import menu
 
-        self.assertEqual(len(menu.groups), 6)
+        self.assertEqual(len(menu.groups), 7)
 
     def test_menu_has_expected_items(self):
         from netbox_cisco_aci.navigation import menu
 
         total = sum(len(g.items) for g in menu.groups)
-        self.assertEqual(total, 19)  # 3+6+4+2+1+3
+        self.assertEqual(total, 24)  # 3+6+4+2+1+3+5
 
     def test_group_item_counts(self):
         from netbox_cisco_aci.navigation import menu
@@ -159,6 +176,7 @@ class NavigationStructureTests(TestCase):
         self.assertEqual(len(groups["Contracts"]), 2)
         self.assertEqual(len(groups["L3Outs"]), 1)
         self.assertEqual(len(groups["Policies"]), 3)
+        self.assertEqual(len(groups["Pod Policies"]), 5)
 
     def test_all_menu_urls_resolve(self):
         from netbox_cisco_aci.navigation import menu

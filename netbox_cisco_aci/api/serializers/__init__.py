@@ -59,6 +59,20 @@ from .l3out import (  # noqa: F401
     ACIOSPFInterfaceAttachmentSerializer,
     ACIOSPFInterfacePolicySerializer,
 )
+from .pod_policies import (  # noqa: F401
+    ACINTPPolicySerializer,
+    ACINTPProviderSerializer,
+    ACIPodPolicyGroupSerializer,
+    ACISNMPClientGroupSerializer,
+    ACISNMPClientSerializer,
+    ACISNMPCommunitySerializer,
+    ACISNMPPolicySerializer,
+    ACISNMPTrapDestSerializer,
+    ACISNMPTrapPolicySerializer,
+    ACISNMPv3UserSerializer,
+    ACISyslogPolicySerializer,
+    ACISyslogRemoteDestSerializer,
+)
 from .tenant import (  # noqa: F401
     ACIAppProfileSerializer,
     ACIBridgeDomainSerializer,

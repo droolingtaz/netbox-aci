@@ -703,3 +703,156 @@ class RangeAllChoices(ChoiceSet):
         (RANGE, _("Range")),
         (ALL, _("All")),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Pod policies — NTP / Syslog / SNMP / SNMP Traps (v0.3.0)
+# ---------------------------------------------------------------------------
+
+
+class NTPProviderStateChoices(ChoiceSet):
+    """NTP provider role within an ACI NTP policy.
+
+    Mirrors APIC's ``datetimeNtpProv`` ``preferred`` flag and the
+    ``master`` toggle: a provider can act as a master clock, be the
+    preferred upstream, or just a fallback.
+    """
+
+    key = "ACINTPProvider.role"
+
+    NORMAL = "normal"
+    PREFERRED = "preferred"
+    MASTER = "master"
+
+    CHOICES = [
+        (NORMAL, _("Normal"), "gray"),
+        (PREFERRED, _("Preferred"), "blue"),
+        (MASTER, _("Master"), "green"),
+    ]
+
+
+class SyslogSeverityChoices(ChoiceSet):
+    """Syslog severity (``syslogRsDestGroup.severity`` / ``syslogConsole.severity``)."""
+
+    key = "ACISyslog.severity"
+
+    EMERGENCIES = "emergencies"
+    ALERTS = "alerts"
+    CRITICAL = "critical"
+    ERRORS = "errors"
+    WARNINGS = "warnings"
+    NOTIFICATIONS = "notifications"
+    INFORMATION = "information"
+    DEBUGGING = "debugging"
+
+    CHOICES = [
+        (EMERGENCIES, _("Emergencies (0)"), "red"),
+        (ALERTS, _("Alerts (1)"), "red"),
+        (CRITICAL, _("Critical (2)"), "red"),
+        (ERRORS, _("Errors (3)"), "orange"),
+        (WARNINGS, _("Warnings (4)"), "yellow"),
+        (NOTIFICATIONS, _("Notifications (5)"), "blue"),
+        (INFORMATION, _("Information (6)"), "gray"),
+        (DEBUGGING, _("Debugging (7)"), "gray"),
+    ]
+
+
+class SyslogFacilityChoices(ChoiceSet):
+    """Syslog forwarding facility (``syslogRemoteDest.forwardingFacility``).
+
+    APIC exposes the standard ``local0`` … ``local7`` set.
+    """
+
+    key = "ACISyslogRemoteDest.forwarding_facility"
+
+    LOCAL0 = "local0"
+    LOCAL1 = "local1"
+    LOCAL2 = "local2"
+    LOCAL3 = "local3"
+    LOCAL4 = "local4"
+    LOCAL5 = "local5"
+    LOCAL6 = "local6"
+    LOCAL7 = "local7"
+
+    CHOICES = [
+        (LOCAL0, _("local0")),
+        (LOCAL1, _("local1")),
+        (LOCAL2, _("local2")),
+        (LOCAL3, _("local3")),
+        (LOCAL4, _("local4")),
+        (LOCAL5, _("local5")),
+        (LOCAL6, _("local6")),
+        (LOCAL7, _("local7")),
+    ]
+
+
+class SNMPAuthProtocolChoices(ChoiceSet):
+    """SNMPv3 user authentication protocol."""
+
+    key = "ACISNMPv3User.auth_protocol"
+
+    NONE = "none"
+    MD5 = "hmac-md5-96"
+    SHA = "hmac-sha1-96"
+    SHA224 = "hmac-sha2-224"
+    SHA256 = "hmac-sha2-256"
+    SHA384 = "hmac-sha2-384"
+    SHA512 = "hmac-sha2-512"
+
+    CHOICES = [
+        (NONE, _("None")),
+        (MD5, _("HMAC-MD5-96")),
+        (SHA, _("HMAC-SHA1-96")),
+        (SHA224, _("HMAC-SHA2-224")),
+        (SHA256, _("HMAC-SHA2-256")),
+        (SHA384, _("HMAC-SHA2-384")),
+        (SHA512, _("HMAC-SHA2-512")),
+    ]
+
+
+class SNMPPrivProtocolChoices(ChoiceSet):
+    """SNMPv3 user privacy protocol."""
+
+    key = "ACISNMPv3User.privacy_protocol"
+
+    NONE = "none"
+    DES = "des"
+    AES128 = "aes-128"
+
+    CHOICES = [
+        (NONE, _("None")),
+        (DES, _("DES")),
+        (AES128, _("AES-128")),
+    ]
+
+
+class SNMPSecurityLevelChoices(ChoiceSet):
+    """SNMPv3 security level for a trap forwarder."""
+
+    key = "ACISNMPTrapDest.v3_security_level"
+
+    NO_AUTH_NO_PRIV = "noauth"
+    AUTH_NO_PRIV = "auth"
+    AUTH_PRIV = "priv"
+
+    CHOICES = [
+        (NO_AUTH_NO_PRIV, _("noAuthNoPriv")),
+        (AUTH_NO_PRIV, _("authNoPriv")),
+        (AUTH_PRIV, _("authPriv")),
+    ]
+
+
+class SNMPVersionChoices(ChoiceSet):
+    """SNMP version used by a trap destination."""
+
+    key = "ACISNMPTrapDest.version"
+
+    V1 = "v1"
+    V2C = "v2c"
+    V3 = "v3"
+
+    CHOICES = [
+        (V1, _("v1")),
+        (V2C, _("v2c")),
+        (V3, _("v3")),
+    ]

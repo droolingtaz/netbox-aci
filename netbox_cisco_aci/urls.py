@@ -22,6 +22,7 @@ from .views import bindings as bnd
 from .views import contracts as ctr
 from .views import fabric as fab
 from .views import l3out as l3o
+from .views import pod_policies as pp
 from .views import tenant as tn
 
 app_name = "netbox_cisco_aci"
@@ -308,3 +309,29 @@ urlpatterns += _crud(
     "ACIBFDInterfaceAttachment",
     "acibfdinterfaceattachment",
 )
+
+# v0.3.0 — Pod policies (NTP / Syslog / SNMP / SNMP Traps)
+urlpatterns += _crud("ntp-policies", "ntp-pol", pp, "ACINTPPolicy", "acintppolicy")
+urlpatterns += _crud("ntp-providers", "ntp-prov", pp, "ACINTPProvider", "acintpprovider")
+urlpatterns += _crud("syslog-policies", "syslog-pol", pp, "ACISyslogPolicy", "acisyslogpolicy")
+urlpatterns += _crud(
+    "syslog-remote-destinations",
+    "syslog-dest",
+    pp,
+    "ACISyslogRemoteDest",
+    "acisyslogremotedest",
+)
+urlpatterns += _crud("snmp-policies", "snmp-pol", pp, "ACISNMPPolicy", "acisnmppolicy")
+urlpatterns += _crud("snmp-communities", "snmp-comm", pp, "ACISNMPCommunity", "acisnmpcommunity")
+urlpatterns += _crud(
+    "snmp-client-groups", "snmp-grp", pp, "ACISNMPClientGroup", "acisnmpclientgroup"
+)
+urlpatterns += _crud("snmp-clients", "snmp-cli", pp, "ACISNMPClient", "acisnmpclient")
+urlpatterns += _crud("snmp-v3-users", "snmp-v3", pp, "ACISNMPv3User", "acisnmpv3user")
+urlpatterns += _crud(
+    "snmp-trap-policies", "snmp-trap-pol", pp, "ACISNMPTrapPolicy", "acisnmptrappolicy"
+)
+urlpatterns += _crud(
+    "snmp-trap-destinations", "snmp-trap-dst", pp, "ACISNMPTrapDest", "acisnmptrapdest"
+)
+urlpatterns += _crud("pod-policy-groups", "pod-pg", pp, "ACIPodPolicyGroup", "acipodpolicygroup")

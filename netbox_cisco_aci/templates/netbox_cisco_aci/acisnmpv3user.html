@@ -1,0 +1,34 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "SNMPv3 User" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">{% trans "User" %}</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">{% trans "SNMP Policy" %}</th>
+          <td><a href="{{ object.snmp_policy.get_absolute_url }}">{{ object.snmp_policy }}</a></td></tr>
+        <tr><th scope="row">{% trans "Auth protocol" %}</th><td>{{ object.get_auth_protocol_display }}</td></tr>
+        <tr><th scope="row">{% trans "Privacy protocol" %}</th><td>{{ object.get_privacy_protocol_display }}</td></tr>
+        <tr><th scope="row">{% trans "Description" %}</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "Secret storage" %}</h2>
+      <div class="card-body">
+        <p class="text-muted small">
+          {% trans "This record references an SNMPv3 user that exists on APIC. The authentication and privacy passphrases are not stored in NetBox \u2014 they live only on APIC. Use this record for operational visibility (which user goes with which policy) and rotate secrets out-of-band." %}
+        </p>
+      </div>
+    </div>
+    {% include 'inc/panels/comments.html' %}
+  </div>
+</div>
+{% endblock %}
