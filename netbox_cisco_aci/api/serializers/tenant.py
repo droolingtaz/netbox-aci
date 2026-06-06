@@ -5,7 +5,7 @@ on write, nested representation on read) and declares
 ``Meta.brief_fields`` so ``?brief=True`` works.
 """
 
-from ipam.api.serializers import PrefixSerializer, VRFSerializer
+from ipam.api.serializers import IPAddressSerializer, PrefixSerializer, VRFSerializer
 from netbox.api.serializers import NetBoxModelSerializer
 from rest_framework import serializers
 
@@ -157,6 +157,7 @@ class ACIBridgeDomainSerializer(NetBoxModelSerializer):
 class ACIBridgeDomainSubnetSerializer(NetBoxModelSerializer):
     url = _url("acibridgedomainsubnet")
     aci_bridge_domain = ACIBridgeDomainSerializer(nested=True)
+    gateway_ipam_ip_address = IPAddressSerializer(nested=True, required=False, allow_null=True)
     nb_prefix = PrefixSerializer(nested=True, required=False, allow_null=True)
 
     class Meta:
@@ -169,6 +170,7 @@ class ACIBridgeDomainSubnetSerializer(NetBoxModelSerializer):
             "name_alias",
             "aci_bridge_domain",
             "gateway_ip",
+            "gateway_ipam_ip_address",
             "nb_prefix",
             "scope_public",
             "scope_shared",
@@ -181,12 +183,13 @@ class ACIBridgeDomainSubnetSerializer(NetBoxModelSerializer):
             "last_updated",
         )
         brief_fields = (
-            "id",
-            "url",
-            "display",
-            "gateway_ip",
             "aci_bridge_domain",
             "description",
+            "display",
+            "gateway_ip",
+            "gateway_ipam_ip_address",
+            "id",
+            "url",
         )
 
 

@@ -2,6 +2,7 @@
 
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from ipam.models import IPAddress
 from netbox.forms import (
     NetBoxModelBulkEditForm,
     NetBoxModelFilterSetForm,
@@ -253,11 +254,22 @@ class ACIBridgeDomainSubnetForm(NetBoxModelForm):
     aci_bridge_domain = DynamicModelChoiceField(
         queryset=ACIBridgeDomain.objects.all(), label=_("Bridge Domain")
     )
+    gateway_ipam_ip_address = DynamicModelChoiceField(
+        queryset=IPAddress.objects.all(),
+        required=False,
+        label=_("Gateway IP (IPAM)"),
+        help_text=_(
+            "Preferred: link to an existing ipam.IPAddress representing "
+            "the BD gateway. Takes precedence over the legacy free-form "
+            "field below when both are set."
+        ),
+    )
     fieldsets = (
         FieldSet(
             "aci_bridge_domain",
             "name",
             "name_alias",
+            "gateway_ipam_ip_address",
             "gateway_ip",
             "nb_prefix",
             "is_primary",
@@ -279,6 +291,7 @@ class ACIBridgeDomainSubnetForm(NetBoxModelForm):
             "name",
             "name_alias",
             "gateway_ip",
+            "gateway_ipam_ip_address",
             "nb_prefix",
             "scope_public",
             "scope_shared",
@@ -317,6 +330,7 @@ class ACIBridgeDomainSubnetImportForm(NetBoxModelImportForm):
             "name",
             "name_alias",
             "gateway_ip",
+            "gateway_ipam_ip_address",
             "scope_public",
             "scope_shared",
             "scope_private",

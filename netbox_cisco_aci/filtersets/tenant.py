@@ -111,6 +111,14 @@ class ACIBridgeDomainSubnetFilterSet(NetBoxModelFilterSet):
         field_name="aci_bridge_domain",
         label="Bridge Domain (ID)",
     )
+    # Filter rows by the IPAM gateway FK. Lazy-imported queryset so the
+    # filter file can be imported before ipam.IPAddress is fully
+    # registered with the apps registry on slow boots.
+    gateway_ipam_ip_address_id = django_filters.NumberFilter(
+        field_name="gateway_ipam_ip_address",
+        lookup_expr="exact",
+        label="Gateway IPAM IP Address (ID)",
+    )
 
     class Meta:
         model = ACIBridgeDomainSubnet
@@ -118,6 +126,7 @@ class ACIBridgeDomainSubnetFilterSet(NetBoxModelFilterSet):
             "id",
             "name",
             "gateway_ip",
+            "gateway_ipam_ip_address",
             "scope_public",
             "scope_shared",
             "scope_private",
@@ -128,8 +137,12 @@ class ACIBridgeDomainSubnetFilterSet(NetBoxModelFilterSet):
     def search(self, queryset, name, value):
         if not value.strip():
             return queryset
+        # Search hits the legacy free-form gateway_ip plus the IPAM IP's
+        # `address` (CIDR notation as text). NetBox's ipam.IPAddress
+        # exposes ``address__icontains`` for that match.
         return queryset.filter(
             Q(gateway_ip__icontains=value)
+            | Q(gateway_ipam_ip_address__address__icontains=value)
             | Q(name__icontains=value)
             | Q(description__icontains=value)
         )

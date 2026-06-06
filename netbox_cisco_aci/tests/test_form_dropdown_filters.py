@@ -34,16 +34,58 @@ import re
 
 from django.test import SimpleTestCase
 
-# Match a ``identifier = DynamicModel(Multiple)?ChoiceField(...)``
-# declaration including the (possibly multi-line) argument list. The
-# inner alternation handles balanced parentheses one level deep, which
-# is enough for every declaration the plugin currently uses.
-_FIELD_PATTERN = re.compile(
+# Match the *start* of a ``identifier = DynamicModel(Multiple)?ChoiceField(``
+# declaration. The body (everything up to the matching closing paren) is
+# then extracted by a paren-counting walker rather than a regex, because
+# a regex with balanced-paren alternation backtracks catastrophically on
+# bodies that contain nested function calls like ``help_text=_("...")``.
+_FIELD_START_PATTERN = re.compile(
     r"(?P<name>\w+)\s*=\s*DynamicModel(?:Choice|MultipleChoice)Field\("
-    r"(?P<body>(?:[^()]+|\([^()]*\))*?)"
-    r"\)",
-    re.DOTALL,
 )
+
+
+def _extract_field_bodies(src: str):
+    """Yield (match_start, name, body) tuples for every DynamicModel*ChoiceField
+    declaration in ``src``. ``body`` is the substring between the opening
+    ``(`` and the matching ``)`` of the field constructor — including any
+    nested function calls.
+    """
+    for m in _FIELD_START_PATTERN.finditer(src):
+        depth = 1
+        i = m.end()
+        n = len(src)
+        # Skip past string literals so an unbalanced ``)`` inside a quoted
+        # string can't fool the depth counter. We only need to handle the
+        # quote styles the codebase actually uses.
+        while i < n and depth > 0:
+            c = src[i]
+            if c == "(":
+                depth += 1
+                i += 1
+            elif c == ")":
+                depth -= 1
+                i += 1
+            elif c in ("'", '"'):
+                quote = c
+                # Triple-quoted string?
+                if src[i : i + 3] == quote * 3:
+                    end = src.find(quote * 3, i + 3)
+                    i = (end + 3) if end != -1 else n
+                else:
+                    i += 1
+                    while i < n and src[i] != quote:
+                        if src[i] == "\\" and i + 1 < n:
+                            i += 2
+                        else:
+                            i += 1
+                    i += 1  # consume the closing quote
+            else:
+                i += 1
+        # i is now one past the matching ')'. Body is between m.end() and i-1.
+        if depth == 0:
+            body = src[m.end() : i - 1]
+            yield m.start(), m.group("name"), body
+
 
 # Exclusion list: fields where we have inspected the situation and
 # concluded that no API-side filter is needed (e.g. the API endpoint
@@ -68,9 +110,7 @@ class DynamicModelChoiceFiltersPropagateTests(SimpleTestCase):
         offenders: list[tuple[str, str, str]] = []
         for path in sorted(self.forms_dir.glob("*.py")):
             src = path.read_text()
-            for match in _FIELD_PATTERN.finditer(src):
-                body = match.group("body")
-                name = match.group("name")
+            for match_start, name, body in _extract_field_bodies(src):
                 # Only fields whose queryset is restricted server-side
                 # need API-side propagation. ``.all()`` is fine; a bare
                 # ``.objects`` is fine.
@@ -85,7 +125,7 @@ class DynamicModelChoiceFiltersPropagateTests(SimpleTestCase):
                 key = (path.name, name)
                 if key in _EXEMPT:
                     continue
-                line = src[: match.start()].count("\n") + 1
+                line = src[:match_start].count("\n") + 1
                 offenders.append((f"{path.name}:{line}", name, body[:200]))
 
         if offenders:
