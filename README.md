@@ -3,13 +3,13 @@
 A [NetBox](https://netboxlabs.com/oss/netbox/) plugin for **operational
 visibility and documentation of Cisco ACI** fabrics.
 
-Models every ACI construct needed for daily operations — Fabrics, Pods,
-Nodes (linked to existing `dcim.Device` records), Tenants, VRFs, Bridge
-Domains and subnets, Application Profiles, EPGs / ESGs (including uSeg),
-Contracts / Subjects / Filters, AAEPs, Domains, VLAN Pools, Switch and
-Interface profiles, L3Outs (with BGP / OSPF / EIGRP peers and External
-EPGs), and **per-interface EPG/BD/Subnet bindings** so you can see the
-ACI policy applied to any device or port at a glance.
+Models every ACI construct an operator touches on day one: physical
+topology, tenancy, access policies, contracts, L3Outs, and the
+fabric-wide pod policies (NTP, syslog, SNMP, SNMP traps, BGP route
+reflector, COOP, IS-IS) that apply to every pod via a Pod Policy
+Group and Pod Profile. Includes per-interface EPG / BD / Subnet
+bindings so you can see the ACI policy applied to any device or port
+at a glance.
 
 [![CI](https://github.com/droolingtaz/netbox-cisco-aci/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/droolingtaz/netbox-cisco-aci/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/droolingtaz/netbox-cisco-aci/branch/main/graph/badge.svg?precision=1)](https://app.codecov.io/gh/droolingtaz/netbox-cisco-aci)
@@ -21,7 +21,8 @@ ACI policy applied to any device or port at a glance.
 
 ## Compatibility
 
-See the [compatibility matrix](COMPATIBILITY.md) for supported NetBox versions.
+NetBox v4.6 only, Python 3.12. See the [compatibility matrix](COMPATIBILITY.md)
+for the exact pinning policy.
 
 The plugin is designed to run unmodified on **NetBox Enterprise** and
 **NetBox Cloud** (both Kubernetes-based, multi-pod, immutable
@@ -31,27 +32,85 @@ and enforced by the `cloud-compat` CI job.
 
 ## Features
 
-- **Fabric topology** — Fabric → Pod → Node, with each Node optionally
-  linked to a `dcim.Device` so existing inventory remains the source of
-  truth for hardware.
-- **Tenancy model** — Tenant → VRF, Bridge Domain (+ Subnets),
-  Application Profile → EPG / ESG, including uSeg attributes.
-- **Access policies** — VLAN Pools, Physical / L3 / VMM Domains, AAEPs
-  with EPG mappings, Switch Profiles, Interface Profiles, Interface
-  Policy Groups, and per-policy refs (CDP / LLDP / LACP / MCP / STP /
-  Link Level).
-- **Contracts** — Contracts, Subjects, Filters with entries, and
-  Provider / Consumer relations (including `common`-tenant imports and
-  inter-VRF / shared-services patterns).
-- **L3Outs** — Logical Node Profiles, Logical Interface Profiles
-  (routed / SVI / sub-interface), BGP / OSPF / EIGRP peers, External
-  EPGs with subnets and contract bindings.
-- **Device & interface visibility** — every static port binding links
-  an EPG to a `dcim.Interface`. The plugin injects panels on both the
-  Device and Interface detail views showing the EPGs, BDs, Subnets, and
-  VRFs that touch that hardware.
+The plugin's navigation mirrors how an ACI operator actually structures
+work in APIC. Each group below maps 1:1 to a sidebar group in NetBox.
+
+### Fabric
+
+- **Fabric → Pod → Node**, with each Node optionally linked to a
+  `dcim.Device` so existing inventory remains the source of truth for
+  hardware.
+
+### Tenancy
+
+- **Tenant → VRF, Bridge Domain (+ Subnets)** — BD Subnets carry both
+  a free-form `gateway_ip` and an IPAM-linked `gateway_ipam_ip_address`
+  FK so gateways can participate in NetBox IPAM utilisation and audit
+  reporting.
+- **Application Profile → EPG / ESG**, including uSeg attributes.
+- Validations: encap-VLAN check on static port bindings, External EPG
+  duplicate-prefix-in-VRF check, AAEP overlapping-VLAN check.
+
+### Connectivity (Access Policies)
+
+- **VLAN Pools, Physical / L3 / VMM Domains, AAEPs** with EPG mappings.
+- **Switch Profiles, Interface Profiles, Interface Policy Groups**, and
+  per-policy refs (CDP / LLDP / LACP / MCP / STP / Link Level).
+- **Per-interface bindings** — every static port binding links an EPG
+  to a `dcim.Interface`. The plugin injects panels on both the Device
+  and Interface detail views showing the EPGs, BDs, Subnets, and VRFs
+  that touch that hardware.
+
+### Contracts
+
+- **Contracts, Subjects, Filters with entries**, and Provider / Consumer
+  relations (including `common`-tenant imports and inter-VRF /
+  shared-services patterns).
+
+### L3Outs
+
+- **Logical Node Profiles, Logical Interface Profiles** (routed / SVI /
+  sub-interface), **BGP / OSPF / EIGRP peers**, **External EPGs** with
+  subnets and contract bindings.
+- **BFD** — `ACIBFDInterfacePolicy` and per-interface attachments for
+  the L3Out logical-interface profiles that need it.
+- `PLUGINS_CONFIG['netbox_cisco_aci']['l3out_default_protocols']`
+  seeds the L3Out protocol checkboxes at site level.
+
+### Pod Policies
+
+The fabric-wide monitoring and control-plane policies that APIC's
+pod-policy-group bundles together and applies to every pod:
+
+- **Pod Profile + Pod Selector** (`fabricPodP` / `fabricPodS`) — the
+  binding layer. A selector is range/ALL and points at exactly one
+  Pod Policy Group.
+- **Pod Policy Group** (`fabricPodPGrp`) — the central row that links
+  one policy of each type below.
+- **NTP** — policy + per-provider list, with min/max poll, key-ID,
+  and a partial-unique constraint enforcing "at most one preferred
+  provider per policy".
+- **Syslog** — policy + remote destinations with per-destination
+  severity and forwarding facility.
+- **SNMP** — policy + communities, client groups + clients, and v3
+  users. Auth and privacy protocols are recorded for visibility;
+  passphrases stay on APIC.
+- **SNMP Traps** — policy + forwarder destinations, with `version=v3`
+  guarded by a `clean()` check on `v3_security_level`.
+- **BGP Route Reflector** — policy + per-spine-node list
+  (`bgpRRP` / `bgpRRNodePEp`).
+- **COOP Group** — strict / compatible MD5 authentication between
+  spines.
+- **IS-IS Domain** — metric style, LSP timers, fast-flood.
+- **Date/Time** — reuses the NTP policy model, since APIC's
+  `datetimePol` MO has the same shape.
+
+### Platform integration
+
 - **Full NetBox surface** — REST API, GraphQL, search, navigation,
   change-logging, journal, custom fields, tags, and per-object RBAC.
+- **CI-enforced cloud compatibility** — the `cloud-compat` job blocks
+  any pattern that would break on NetBox Cloud / Enterprise.
 
 ## Installation
 
